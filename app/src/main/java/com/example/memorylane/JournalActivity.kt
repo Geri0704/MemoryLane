@@ -16,9 +16,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.memorylane.ui.theme.MemorylaneTheme
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class JournalActivity : ComponentActivity() {
 //    TODO
@@ -48,12 +52,20 @@ fun JournalPage(modifier: Modifier = Modifier) {
         var journalEntry by remember { mutableStateOf("") }
         var happiness by remember { mutableStateOf(5f) }
 
-        TextField(
-            value = journalEntry,
-            onValueChange = { journalEntry = it },
-            label = { Text("Enter today's entry") },
-            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.5f)
-        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            TextField(
+                value = journalEntry,
+                onValueChange = { journalEntry = it },
+                label = { Text("Enter today's entry") },
+                modifier = Modifier.fillMaxWidth().fillMaxHeight(0.5f)
+            )
+
+            Text(
+                text = SimpleDateFormat("dd/MM", Locale.getDefault()).format(Date()),
+                color = Color.LightGray,
+                modifier = Modifier.align(Alignment.TopEnd).padding(6.dp)
+            )
+        }
 
         Spacer(modifier = modifier.height(16.dp))
 
