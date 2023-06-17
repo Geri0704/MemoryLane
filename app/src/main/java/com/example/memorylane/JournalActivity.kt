@@ -17,19 +17,32 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.memorylane.client.AIClient
 import com.example.memorylane.ui.theme.MemorylaneTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class JournalActivity : ComponentActivity() {
+interface GptResponseListener {
+    fun onGptResponse(response: String)
+    fun onGptFailure(e: Exception)
+}
+
+class JournalActivity : ComponentActivity(), GptResponseListener {
 //    TODO
 //    private lateinit var dbHelper: DatabaseHelper
+    private lateinit var gptRequest: AIClient
+    lateinit var textFieldLabel: MutableState<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        gptRequest = AIClient(this);
+        gptRequest.makeGptRequest("Give me a short innovative journal entry prompt about today (No quotes around prompt)")
+        textFieldLabel = mutableStateOf("Loading prompt...")
 
         setContent {
             MemorylaneTheme {
@@ -37,6 +50,18 @@ class JournalActivity : ComponentActivity() {
                     JournalPage()
                 }
             }
+        }
+    }
+
+    override fun onGptResponse(response: String) {
+        runOnUiThread {
+            textFieldLabel.value = response
+        }
+    }
+
+    override fun onGptFailure(e: Exception) {
+        runOnUiThread {
+            textFieldLabel.value = "Failed to get prompt..."
         }
     }
 }
@@ -51,19 +76,21 @@ fun JournalPage(modifier: Modifier = Modifier) {
         // entry and happiness rating store
         var journalEntry by remember { mutableStateOf("") }
         var happiness by remember { mutableStateOf(5f) }
+        val journalActivity = LocalContext.current as JournalActivity
+        val textFieldLabel = journalActivity.textFieldLabel.value
 
         Box(modifier = Modifier.fillMaxWidth()) {
             TextField(
                 value = journalEntry,
                 onValueChange = { journalEntry = it },
-                label = { Text("Enter today's entry") },
+                label = { Text(textFieldLabel) },
                 modifier = Modifier.fillMaxWidth().fillMaxHeight(0.5f)
             )
 
             Text(
                 text = SimpleDateFormat("dd/MM", Locale.getDefault()).format(Date()),
                 color = Color.LightGray,
-                modifier = Modifier.align(Alignment.TopEnd).padding(6.dp)
+                modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp)
             )
         }
 
