@@ -16,7 +16,9 @@ class AIClient(private val listener: GptResponseListener) : ClientGptResponseLis
 
     private val client = HTTPClient()
 
-    fun makeGptRequest(prompt: String) {
+    private var requestId = 0
+
+    fun makeGptRequest(prompt: String, requestId: Int = 0) {
         val json = """
             {
                 "model": "gpt-3.5-turbo",
@@ -33,6 +35,8 @@ class AIClient(private val listener: GptResponseListener) : ClientGptResponseLis
             }
         """.trimIndent()
 
+        this.requestId = requestId
+
         client.makeRequest(URL, KEY, json, this);
     }
 
@@ -45,7 +49,12 @@ class AIClient(private val listener: GptResponseListener) : ClientGptResponseLis
             val messageObject = choiceObject.getJSONObject("message")
             val content = messageObject.getString("content")
 
-            listener.onGptResponse(content)
+            if (requestId == 0) {
+                listener.onGptResponse(content)
+            } else if (requestId == 1) {
+                val contentList = content.replace(".", "").split(", ")
+                listener.onGptThemeResponse(contentList)
+            }
         }
     }
 

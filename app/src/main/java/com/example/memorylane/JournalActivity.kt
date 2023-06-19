@@ -4,10 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Text
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Slider
@@ -23,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.example.memorylane.client.AIClient
 import com.example.memorylane.data.JournalEntryDO
 import com.example.memorylane.ui.theme.MemorylaneTheme
+import com.google.accompanist.flowlayout.FlowRow
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
 import java.text.SimpleDateFormat
@@ -31,23 +35,25 @@ import java.util.Locale
 
 interface GptResponseListener {
     fun onGptResponse(response: String)
+    fun onGptThemeResponse(response: List<String>)
     fun onGptFailure(e: Exception)
 }
 
 class JournalActivity : ComponentActivity(), GptResponseListener {
     // AI
-    private lateinit var gptRequest: AIClient
+    lateinit var gptRequest: AIClient
     lateinit var textFieldLabel: MutableState<String>
+    lateinit var journalThemes: MutableState<List<String>>
 
     // DB
     lateinit var realm: Realm
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         gptRequest = AIClient(this);
         gptRequest.makeGptRequest("Give me a short innovative journal entry prompt about today (No quotes around prompt)")
         textFieldLabel = mutableStateOf("Loading prompt...")
+        journalThemes = mutableStateOf(listOf())
 
         val config = RealmConfiguration.create(schema = setOf(JournalEntryDO::class))
         realm = Realm.open(config)
@@ -64,6 +70,12 @@ class JournalActivity : ComponentActivity(), GptResponseListener {
     override fun onGptResponse(response: String) {
         runOnUiThread {
             textFieldLabel.value = response
+        }
+    }
+
+    override fun onGptThemeResponse(response: List<String>) {
+        runOnUiThread {
+            journalThemes.value = response
         }
     }
 
@@ -87,6 +99,8 @@ fun JournalPage(modifier: Modifier = Modifier) {
         val journalActivity = LocalContext.current as JournalActivity
         val textFieldLabel = journalActivity.textFieldLabel.value
         val realm = journalActivity.realm
+        val journalThemes = journalActivity.journalThemes.value
+        val gptRequest = journalActivity.gptRequest
 
         Box(modifier = Modifier.fillMaxWidth()) {
             TextField(
@@ -133,10 +147,9 @@ fun JournalPage(modifier: Modifier = Modifier) {
                             happiness = happiness
                         })
                     }
-
-                    journalEntry = ""
-                    happiness = 5f
                 }
+
+                gptRequest.makeGptRequest("Here is a journal entry, give me only a short word list of its themes separated by commas (all in caps): $journalEntry", 1)
 
                 // val items: RealmResults<JournalEntryDO> = realm.query<JournalEntryDO>().find()
             },
@@ -146,8 +159,49 @@ fun JournalPage(modifier: Modifier = Modifier) {
             Spacer(Modifier.width(8.dp))
             Icon(Icons.Filled.Check, contentDescription = "Submit")
         }
+
+        if (journalThemes.isNotEmpty()) {
+            Text(text ="Recognized journal themes:", modifier = Modifier.padding(top = 16.dp))
+        }
+
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            FlowRow(
+                modifier = Modifier.padding(top = 4.dp),
+                mainAxisSpacing = 8.dp,
+                crossAxisSpacing = 8.dp
+            ) {
+                journalThemes.forEach { theme ->
+                    ThemeTag(theme = theme)
+                }
+            }
+        }
     }
 }
+
+@Composable
+fun ThemeTag(theme: String) {
+    val customGreen = Color(0xbfe3b4)
+
+    Card(
+        modifier = Modifier.padding(end = 8.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 10.dp
+        )
+    ) {
+        Surface(color = customGreen) {
+            Text(
+                text = theme,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                color = Color.LightGray
+            )
+        }
+    }
+}
+
 
 @Preview(showBackground = true)
 @Composable
