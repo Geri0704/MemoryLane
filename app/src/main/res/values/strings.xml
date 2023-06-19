@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">memorylane</string>
+    <string name="ai_request_1">Give me a short innovative journal entry prompt about today (No quotes around prompt)</string>
+    <string name="ai_request_2">Here is a journal entry, give me only a short word list of its themes separated by commas (all in caps):</string>
 </resources>

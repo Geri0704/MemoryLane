@@ -51,7 +51,7 @@ class JournalActivity : ComponentActivity(), GptResponseListener {
         super.onCreate(savedInstanceState)
 
         gptRequest = AIClient(this);
-        gptRequest.makeGptRequest("Give me a short innovative journal entry prompt about today (No quotes around prompt)")
+        gptRequest.makeGptRequest(getString(R.string.ai_request_1))
         textFieldLabel = mutableStateOf("Loading prompt...")
         journalThemes = mutableStateOf(listOf())
 
@@ -107,13 +107,17 @@ fun JournalPage(modifier: Modifier = Modifier) {
                 value = journalEntry,
                 onValueChange = { journalEntry = it },
                 label = { Text(textFieldLabel) },
-                modifier = Modifier.fillMaxWidth().fillMaxHeight(0.5f)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.5f)
             )
 
             Text(
                 text = SimpleDateFormat("dd/MM", Locale.getDefault()).format(Date()),
                 color = Color.LightGray,
-                modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp)
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(6.dp)
             )
         }
 
@@ -149,7 +153,8 @@ fun JournalPage(modifier: Modifier = Modifier) {
                     }
                 }
 
-                gptRequest.makeGptRequest("Here is a journal entry, give me only a short word list of its themes separated by commas (all in caps): $journalEntry", 1)
+                val request = journalActivity.getString(R.string.ai_request_2)
+                gptRequest.makeGptRequest("$request $journalEntry", 1)
 
                 // val items: RealmResults<JournalEntryDO> = realm.query<JournalEntryDO>().find()
             },
@@ -160,22 +165,27 @@ fun JournalPage(modifier: Modifier = Modifier) {
             Icon(Icons.Filled.Check, contentDescription = "Submit")
         }
 
-        if (journalThemes.isNotEmpty()) {
-            Text(text ="Recognized journal themes:", modifier = Modifier.padding(top = 16.dp))
-        }
+        JournalThemes(journalThemes)
+    }
+}
 
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+@Composable
+fun JournalThemes(journalThemes : List<String>) {
+    if (journalThemes.isNotEmpty()) {
+        Text(text ="Recognized journal themes:", modifier = Modifier.padding(top = 16.dp))
+    }
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        FlowRow(
+            modifier = Modifier.padding(top = 4.dp),
+            mainAxisSpacing = 8.dp,
+            crossAxisSpacing = 8.dp
         ) {
-            FlowRow(
-                modifier = Modifier.padding(top = 4.dp),
-                mainAxisSpacing = 8.dp,
-                crossAxisSpacing = 8.dp
-            ) {
-                journalThemes.forEach { theme ->
-                    ThemeTag(theme = theme)
-                }
+            journalThemes.forEach { theme ->
+                ThemeTag(theme = theme)
             }
         }
     }
