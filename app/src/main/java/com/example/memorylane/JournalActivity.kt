@@ -21,7 +21,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.memorylane.client.AIClient
+import com.example.memorylane.data.JournalEntryDO
 import com.example.memorylane.ui.theme.MemorylaneTheme
+import io.realm.kotlin.Realm
+import io.realm.kotlin.RealmConfiguration
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -32,10 +35,12 @@ interface GptResponseListener {
 }
 
 class JournalActivity : ComponentActivity(), GptResponseListener {
-//    TODO
-//    private lateinit var dbHelper: DatabaseHelper
+    // AI
     private lateinit var gptRequest: AIClient
     lateinit var textFieldLabel: MutableState<String>
+
+    // DB
+    lateinit var realm: Realm
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,6 +48,9 @@ class JournalActivity : ComponentActivity(), GptResponseListener {
         gptRequest = AIClient(this);
         gptRequest.makeGptRequest("Give me a short innovative journal entry prompt about today (No quotes around prompt)")
         textFieldLabel = mutableStateOf("Loading prompt...")
+
+        val config = RealmConfiguration.create(schema = setOf(JournalEntryDO::class))
+        realm = Realm.open(config)
 
         setContent {
             MemorylaneTheme {
@@ -78,6 +86,7 @@ fun JournalPage(modifier: Modifier = Modifier) {
         var happiness by remember { mutableStateOf(5f) }
         val journalActivity = LocalContext.current as JournalActivity
         val textFieldLabel = journalActivity.textFieldLabel.value
+        val realm = journalActivity.realm
 
         Box(modifier = Modifier.fillMaxWidth()) {
             TextField(
@@ -116,8 +125,20 @@ fun JournalPage(modifier: Modifier = Modifier) {
         Button(
             onClick = {
                 if (journalEntry.isNotEmpty()) {
-                    // TODO: save entry
+                    realm.writeBlocking {
+                        copyToRealm(JournalEntryDO().apply {
+                            date = SimpleDateFormat("dd/MM", Locale.getDefault()).format(Date())
+                            prompt = textFieldLabel
+                            entry = journalEntry
+                            happiness = happiness
+                        })
+                    }
+
+                    journalEntry = ""
+                    happiness = 5f
                 }
+
+                // val items: RealmResults<JournalEntryDO> = realm.query<JournalEntryDO>().find()
             },
             modifier = Modifier.align(Alignment.End)
         ) {
