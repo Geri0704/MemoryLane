@@ -50,7 +50,7 @@ class JournalActivity : ComponentActivity(), GptResponseListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        gptRequest = AIClient(this);
+        gptRequest = AIClient(this)
         gptRequest.makeGptRequest(getString(R.string.ai_request_1))
         textFieldLabel = mutableStateOf("Loading prompt...")
         journalThemes = mutableStateOf(listOf())
