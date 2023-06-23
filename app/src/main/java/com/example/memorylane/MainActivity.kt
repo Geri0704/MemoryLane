@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MemorylaneTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    Base()
+                    mainScreen()
                 }
             }
         }
