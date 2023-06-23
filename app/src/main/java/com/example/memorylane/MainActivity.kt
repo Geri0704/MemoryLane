@@ -73,6 +73,17 @@ fun Base(modifier: Modifier = Modifier) {
             ) {
                 Text(text = "Next")
             }
+
+            Spacer(modifier = modifier.height(16.dp))
+
+            Button(
+                onClick = {
+                    val intent = Intent(context, SettingsActivity::class.java)
+                    context.startActivity(intent)
+                }
+            ) {
+                Text(text = "Settings page")
+            }
         }
     }
 
