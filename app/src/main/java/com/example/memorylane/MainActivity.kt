@@ -16,6 +16,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.navigation.NavController
+import androidx.navigation.NavHost
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
 import com.example.memorylane.ui.theme.MemorylaneTheme
 
 class MainActivity : ComponentActivity() {
@@ -32,7 +37,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Base(modifier: Modifier = Modifier) {
+fun Base(modifier: Modifier = Modifier, onNavigateToJournal: () -> Unit) {
     val context = LocalContext.current
 
     Column(
@@ -66,10 +71,7 @@ fun Base(modifier: Modifier = Modifier) {
             Spacer(modifier = modifier.height(16.dp))
 
             Button(
-                onClick = {
-                    val intent = Intent(context, JournalActivity::class.java)
-                    context.startActivity(intent)
-                }
+                onClick = onNavigateToJournal
             ) {
                 Text(text = "Next")
             }
@@ -83,6 +85,6 @@ fun Base(modifier: Modifier = Modifier) {
 @Composable
 fun PagePreview() {
     MemorylaneTheme {
-        Base()
+        //Base()
     }
 }
