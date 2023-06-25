@@ -6,7 +6,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,7 +38,10 @@ import kotlinx.datetime.LocalDate
 import java.util.Calendar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,7 +72,7 @@ val MOCK_ENTRIES = arrayOf(
     ),
     MockEntry(
         "2023-06-23",
-        "Describe a recent moment of self-discovery that has had a profound impact on your personal growth.?",
+        "Describe a recent moment of self-discovery that has had a profound impact on your personal growth.",
         "A recent moment of self-discovery that had a profound impact on my personal growth was when I took the initiative to step out of my comfort zone and join a public speaking club. Initially, I was nervous and doubted my abilities, but through consistent practice and supportive feedback, I realized my potential to communicate effectively. This experience boosted my confidence, enhanced my communication skills, and taught me the value of embracing challenges. It showed me that growth happens outside of comfort zones, and by pushing myself, I can unlock hidden strengths and continue to evolve as an individual.",
         8f
     ),
@@ -92,6 +99,20 @@ val MONTH_MAPPING: HashMap<String, String> = hashMapOf(
     "12" to "DEC",
 )
 
+@Composable
+fun ElevatedCard(modifier: Modifier = Modifier, content: @Composable() () -> Unit) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 10.dp
+        ),
+    ) {
+        content()
+    }
+}
+
+
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Base(modifier: Modifier = Modifier) {
@@ -112,82 +133,114 @@ fun Base(modifier: Modifier = Modifier) {
         events += event
     }
 
-    var kalendarColors: List<KalendarColor> = ArrayList()
+    val kalendarColors: MutableList<KalendarColor> = ArrayList<KalendarColor>().toMutableList()
     for (i in 1 .. 12) {
         kalendarColors += KalendarColor(Color(255,255,255), Pink40, Pink40)
     }
 
     Column(
-        modifier = modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(10.dp, 10.dp, 10.dp, 100.dp),
     ) {
-        Kalendar(
-            currentDay = null,
-            kalendarType = KalendarType.Firey,
-            showLabel = true,
-            events = KalendarEvents(events),
-            kalendarColors = KalendarColors(kalendarColors),
-            daySelectionMode = DaySelectionMode.Single,
-            onDayClick = { selectedDay, events ->
-                dateSelected = selectedDay.toString()
-            },
+        ElevatedCard {
+            Box (
+                modifier = modifier
+                    .height(400.dp)
+                    .background(Color(255, 255, 255))
+            ) {
+                Kalendar(
+                    //need to set size for scrollable
+                    currentDay = null,
+                    kalendarType = KalendarType.Firey,
+                    showLabel = true,
+                    events = KalendarEvents(events),
+                    kalendarColors = KalendarColors(kalendarColors),
+                    daySelectionMode = DaySelectionMode.Single,
+                    onDayClick = { selectedDay, events ->
+                        dateSelected = selectedDay.toString()
+                    },
+                )
+            }
+        }
+
+        Spacer(modifier = modifier.height(32.dp))
+
+        val (year, month, day) = dateSelected.split('-')
+        Text(
+            text = MONTH_MAPPING[month] + " " + day + ", " + year,
+            style = MaterialTheme.typography.headlineMedium
         )
+        Spacer(modifier = modifier.height(16.dp))
 
-        Column(
-            modifier = modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+        ElevatedCard (
+            modifier = modifier.fillMaxSize()
         ) {
-            if (dateSelected.compareTo(CURRENT_DATE.toString()) > 0) {
-                Text(text = "The future is a blank canvas! Wait to see it!")
+            Column(
+                modifier = modifier.fillMaxSize().background(Color(255,255,255)).padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (dateSelected.compareTo(CURRENT_DATE.toString()) > 0) {
+                    Text(
+                        text = "The future is a blank canvas! Wait to see it!",
+                        style = MaterialTheme.typography.titleMedium
+                    )
 
-                Spacer(modifier = modifier.height(16.dp))
+                    Spacer(modifier = modifier.height(16.dp))
 
-                Icon(imageVector = Icons.Default.Lock, contentDescription = "Lock Icon")
-            } else if (dateSelected.compareTo(CURRENT_DATE.toString()) == 0) {
-                Text(text = "You haven't written your journal yet!")
-                Button(
-                    onClick = {
-                        val intent = Intent(context, JournalActivity::class.java)
-                        context.startActivity(intent)
-                    }
-                ) {
-                    Text(text = "Next")
-                }
-            } else {
-                val (year, month, day) = dateSelected.split('-')
-                Text(text = MONTH_MAPPING[month] + " " + day + ", " + year)
-                var entryFound: MockEntry? = null
-                for (entry in MOCK_ENTRIES) {
-                    if (entry.date == dateSelected) {
-                        entryFound = entry
-                    }
-                }
-
-                if (entryFound != null) {
-                    Text(text = "Prompt: " + entryFound.prompt)
-                    Spacer(modifier = modifier.height(16.dp))
-                    Text(text = "Entry: " + entryFound.entry)
-                    Spacer(modifier = modifier.height(16.dp))
-                    Text(text = "Happiness: " + entryFound.happiness)
-                    Spacer(modifier = modifier.height(16.dp))
+                    Icon(imageVector = Icons.Default.Lock, contentDescription = "Lock Icon")
+                } else if (dateSelected.compareTo(CURRENT_DATE.toString()) == 0) {
+                    Text(
+                        text = "Looks like ou haven't written your journal yet!",
+                        style = MaterialTheme.typography.titleMedium
+                    )
                     Button(
                         onClick = {
-                            TODO()
+                            val intent = Intent(context, JournalActivity::class.java)
+                            context.startActivity(intent)
                         }
                     ) {
-                        Text(text = "Open")
+                        Text(text = "Next")
                     }
-                }
-//
+                } else {
+                    var entryFound: MockEntry? = null
+                    for (entry in MOCK_ENTRIES) {
+                        if (entry.date == dateSelected) {
+                            entryFound = entry
+                        }
+                    }
+
+                    if (entryFound != null) {
+                        Text(
+                            text = entryFound.prompt,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(modifier = modifier.height(16.dp))
+                        Text(
+                            text = entryFound.entry,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = modifier.height(16.dp))
+                        Text(text = "Happiness: " + entryFound.happiness + " " + if (entryFound.happiness < 5f) "😞" else "😀")
+                        Spacer(modifier = modifier.height(16.dp))
+                        Button(
+                            onClick = {
+                                TODO()
+                            }
+                        ) {
+                            Text(text = "Open")
+                        }
+                    }
 //                TODO("TICKET FOR THIS")
+                }
             }
         }
     }
 }
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable
 fun PagePreview() {
