@@ -178,7 +178,9 @@ fun Base(modifier: Modifier = Modifier) {
             modifier = modifier.fillMaxSize()
         ) {
             Column(
-                modifier = modifier.fillMaxSize().background(Color(255,255,255)).padding(16.dp),
+                modifier = modifier.fillMaxSize()
+                    .background(Color(255,255,255))
+                    .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 if (dateSelected.compareTo(CURRENT_DATE.toString()) > 0) {
@@ -186,15 +188,14 @@ fun Base(modifier: Modifier = Modifier) {
                         text = "The future is a blank canvas! Wait to see it!",
                         style = MaterialTheme.typography.titleMedium
                     )
-
                     Spacer(modifier = modifier.height(16.dp))
-
                     Icon(imageVector = Icons.Default.Lock, contentDescription = "Lock Icon")
                 } else if (dateSelected.compareTo(CURRENT_DATE.toString()) == 0) {
                     Text(
-                        text = "Looks like ou haven't written your journal yet!",
+                        text = "Looks like you haven't written your journal yet!",
                         style = MaterialTheme.typography.titleMedium
                     )
+                    Spacer(modifier = modifier.height(16.dp))
                     Button(
                         onClick = {
                             val intent = Intent(context, JournalActivity::class.java)
@@ -231,6 +232,11 @@ fun Base(modifier: Modifier = Modifier) {
                         ) {
                             Text(text = "Open")
                         }
+                    } else {
+                        Text(
+                            text = "You didn't enter a journal entry on this date",
+                            style = MaterialTheme.typography.titleMedium
+                        )
                     }
 //                TODO("TICKET FOR THIS")
                 }
