@@ -3,13 +3,10 @@ package com.example.memorylane
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.widget.RelativeLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -36,10 +33,8 @@ import com.himanshoe.kalendar.ui.firey.DaySelectionMode
 import kotlinx.datetime.LocalDate
 import java.util.Calendar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
-import androidx.compose.ui.draw.clip
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,7 +66,7 @@ val MOCK_ENTRIES = arrayOf(
     MockEntry(
         "2023-06-23",
         "Describe a recent moment of self-discovery that has had a profound impact on your personal growth.?",
-        "A recent moment of self-discovery that had a profound impact on my personal growth was when I took the initiative to step out of my comfort zone and join a public speaking club. Initially, I was nervous and doubted my abilities, but through consistent practice and supportive feedback, I realized my potential to communicate effectively. This experience boosted my confidence, enhanced my communication skills, and taught me the value of embracing challenges. It showed me that growth happens outside of comfort zones, and by pushing myself, I can unlock hidden strengths and continue to evolve as an individual."
+        "A recent moment of self-discovery that had a profound impact on my personal growth was when I took the initiative to step out of my comfort zone and join a public speaking club. Initially, I was nervous and doubted my abilities, but through consistent practice and supportive feedback, I realized my potential to communicate effectively. This experience boosted my confidence, enhanced my communication skills, and taught me the value of embracing challenges. It showed me that growth happens outside of comfort zones, and by pushing myself, I can unlock hidden strengths and continue to evolve as an individual.",
         8f
     ),
     MockEntry(
@@ -82,25 +77,36 @@ val MOCK_ENTRIES = arrayOf(
     )
 )
 
+val MONTH_MAPPING: HashMap<String, String> = hashMapOf(
+    "01" to "JAN",
+    "02" to "FEB",
+    "03" to "MAR",
+    "04" to "APR",
+    "05" to "MAY",
+    "06" to "JUN",
+    "07" to "JUL",
+    "08" to "AUG",
+    "09" to "SEP",
+    "10" to "OCT",
+    "11" to "NOV",
+    "12" to "DEC",
+)
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Base(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    var dateSelected by remember { mutableStateOf("")}
     val CURRENT_DATE = LocalDate(Calendar.getInstance().get(Calendar.YEAR),
         Calendar.getInstance().get(Calendar.MONTH)+1,
         Calendar.getInstance().get(Calendar.DATE))
+    var dateSelected by remember { mutableStateOf(CURRENT_DATE.toString())}
 
 //        TODO: fetch days with journal entries
     var events: List<KalendarEvent> = ArrayList()
     // get events from db
-    for (i in 1..5) {
-        val date = LocalDate(
-            Calendar.getInstance().get(Calendar.YEAR),
-            Calendar.getInstance().get(Calendar.MONTH)+1,
-            Calendar.getInstance().get(Calendar.DATE)-i*2,
-        )
+    for (entry in MOCK_ENTRIES) {
+        val (year, month, day) = entry.date.split('-')
+        val date = LocalDate(year.toInt(), month.toInt(), day.toInt())
 
         val event = KalendarEvent(date, "test", "dse")
         events += event
@@ -110,8 +116,6 @@ fun Base(modifier: Modifier = Modifier) {
     for (i in 1 .. 12) {
         kalendarColors += KalendarColor(Color(255,255,255), Pink40, Pink40)
     }
-
-
 
     Column(
         modifier = modifier.fillMaxSize(),
@@ -152,13 +156,36 @@ fun Base(modifier: Modifier = Modifier) {
                     Text(text = "Next")
                 }
             } else {
-                Text(text = "Previous journal view page")
-                TODO("TICKET FOR THIS")
+                val (year, month, day) = dateSelected.split('-')
+                Text(text = MONTH_MAPPING[month] + " " + day + ", " + year)
+                var entryFound: MockEntry? = null
+                for (entry in MOCK_ENTRIES) {
+                    if (entry.date == dateSelected) {
+                        entryFound = entry
+                    }
+                }
+
+                if (entryFound != null) {
+                    Text(text = "Prompt: " + entryFound.prompt)
+                    Spacer(modifier = modifier.height(16.dp))
+                    Text(text = "Entry: " + entryFound.entry)
+                    Spacer(modifier = modifier.height(16.dp))
+                    Text(text = "Happiness: " + entryFound.happiness)
+                    Spacer(modifier = modifier.height(16.dp))
+                    Button(
+                        onClick = {
+                            TODO()
+                        }
+                    ) {
+                        Text(text = "Open")
+                    }
+                }
+//
+//                TODO("TICKET FOR THIS")
             }
         }
     }
 }
-
 
 
 @Preview(showBackground = true)
