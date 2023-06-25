@@ -54,8 +54,33 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+data class MockEntry(
+    val date: String,
+    val prompt: String,
+    val entry: String,
+    val happiness: Float,
+)
 
-
+val MOCK_ENTRIES = arrayOf(
+    MockEntry(
+        "2023-06-22",
+        "What was something you are grateful for today?",
+        "Today, I am grateful for the support and encouragement of my classmates and friends. Their presence and collaboration make the learning experience more enjoyable and meaningful. Whether it's studying together, exchanging ideas, or providing emotional support, their friendship and camaraderie create a positive atmosphere that motivates me to strive for success. Knowing that I have a strong support system in my fellow students fills me with gratitude and reminds me that I am not alone on this educational journey.",
+        7f
+    ),
+    MockEntry(
+        "2023-06-23",
+        "Describe a recent moment of self-discovery that has had a profound impact on your personal growth.?",
+        "A recent moment of self-discovery that had a profound impact on my personal growth was when I took the initiative to step out of my comfort zone and join a public speaking club. Initially, I was nervous and doubted my abilities, but through consistent practice and supportive feedback, I realized my potential to communicate effectively. This experience boosted my confidence, enhanced my communication skills, and taught me the value of embracing challenges. It showed me that growth happens outside of comfort zones, and by pushing myself, I can unlock hidden strengths and continue to evolve as an individual."
+        8f
+    ),
+    MockEntry(
+        "2023-06-24",
+        "What was something you are grateful for today?",
+        "Today, I experienced a setback when I received a lower grade on a test than I had hoped for. It was disappointing and disheartening, but it taught me valuable lessons. Firstly, it reminded me of the importance of thorough preparation and studying consistently. Secondly, it highlighted the significance of seeking help and clarification when facing difficulties. Lastly, it reinforced the need to embrace failure as an opportunity for growth rather than letting it define me. This setback served as a reminder to stay resilient, learn from my mistakes, and persevere in my academic journey.",
+        4f
+    )
+)
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -85,6 +110,8 @@ fun Base(modifier: Modifier = Modifier) {
     for (i in 1 .. 12) {
         kalendarColors += KalendarColor(Color(255,255,255), Pink40, Pink40)
     }
+
+
 
     Column(
         modifier = modifier.fillMaxSize(),
