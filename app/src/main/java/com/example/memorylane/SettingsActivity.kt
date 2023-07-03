@@ -1,5 +1,6 @@
 package com.example.memorylane
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,6 +17,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.memorylane.ui.theme.MemorylaneTheme
@@ -36,6 +38,7 @@ class SettingsActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsPage(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -55,6 +58,13 @@ fun SettingsPage(modifier: Modifier = Modifier) {
                 Icon(imageVector = Icons.Outlined.Notifications, contentDescription = "Notifications Icon")
 
                 Text(text = "Notifications",Modifier.padding(start = 10.dp))
+            }
+
+            Button(onClick = {
+                val intent = Intent(context, ReminderBroadcast::class.java)
+                context.sendBroadcast(intent)
+            }) {
+                Text(text = "Trigger Notification")
             }
 
             Button(onClick = {}) {
