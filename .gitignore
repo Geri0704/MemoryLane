@@ -67,3 +67,5 @@ fastlane/readme.md
 secrets.properties
 
 .idea/
+
+server/node_modules
