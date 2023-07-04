@@ -8,34 +8,40 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 
 class ReminderBroadcast : BroadcastReceiver() {
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onReceive(context: Context, intent: Intent) {
+        sendNotification(context)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    fun sendNotification(context: Context) {
         val builder = NotificationCompat.Builder(context, "com.example.memorylane")
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Daily Reminder")
             .setContentText("It's time to open the app and jot down your memories.")
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
 
         createNotificationChannel(context)
 
         with(NotificationManagerCompat.from(context)) {
+            // Permission check for notifications
             if (ActivityCompat.checkSelfPermission(
                     context,
                     Manifest.permission.POST_NOTIFICATIONS
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return
+                // Request permission if not already granted
+                ActivityCompat.requestPermissions(
+                    context as MainActivity,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    1
+                )
             }
             notify(200, builder.build())
         }
@@ -45,7 +51,7 @@ class ReminderBroadcast : BroadcastReceiver() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = "Memorylane Reminder"
             val descriptionText = "Channel for daily reminder"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel("com.example.memorylane", name, importance).apply {
                 description = descriptionText
             }
@@ -54,3 +60,4 @@ class ReminderBroadcast : BroadcastReceiver() {
         }
     }
 }
+

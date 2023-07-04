@@ -1,9 +1,11 @@
 package com.example.memorylane
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
@@ -23,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.example.memorylane.ui.theme.MemorylaneTheme
 
 class SettingsActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -35,7 +38,7 @@ class SettingsActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun SettingsPage(modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -54,18 +57,20 @@ fun SettingsPage(modifier: Modifier = Modifier) {
                 Text(text = "Account",Modifier.padding(start = 10.dp))
             }
 
-            Button(onClick = {}) {
+            Button(onClick = {
+                val intent = Intent(context, NotificationSettingsActivity::class.java)
+                context.startActivity(intent)
+            }) {
                 Icon(imageVector = Icons.Outlined.Notifications, contentDescription = "Notifications Icon")
-
-                Text(text = "Notifications",Modifier.padding(start = 10.dp))
+                Text(text = "Notifications", Modifier.padding(start = 10.dp))
             }
 
             Button(onClick = {
-                val intent = Intent(context, ReminderBroadcast::class.java)
-                context.sendBroadcast(intent)
+                ReminderBroadcast().sendNotification(context)
             }) {
                 Text(text = "Trigger Notification")
             }
+
 
             Button(onClick = {}) {
                 Icon(imageVector = Icons.Outlined.Close, contentDescription = "Close Icon")
@@ -76,6 +81,7 @@ fun SettingsPage(modifier: Modifier = Modifier) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Preview(showBackground = true)
 @Composable
 fun SettingsPagePreview() {
@@ -83,3 +89,4 @@ fun SettingsPagePreview() {
         SettingsPage()
     }
 }
+
