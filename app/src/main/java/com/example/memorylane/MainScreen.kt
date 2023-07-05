@@ -21,11 +21,21 @@ import androidx.navigation.compose.rememberNavController
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun mainScreen() {
-    val navController = rememberNavController()
-    Scaffold(
-        bottomBar = { BottomBar(navController = navController)}
-    ) {
-        BottomNavGraph(navController = navController)
+    var loggedIn = true
+
+    fun logInSuccess() {
+        loggedIn = true
+    }
+
+    if (loggedIn) {
+        val navController = rememberNavController()
+        Scaffold(
+            bottomBar = { BottomBar(navController = navController)}
+        ) {
+            BottomNavGraph(navController = navController)
+        }
+    } else {
+        LogInPage(logInSuccess = { logInSuccess() })
     }
 }
 

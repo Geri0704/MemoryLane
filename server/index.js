@@ -21,15 +21,22 @@ database.once("connected", () => {
 // Using bodyparser to parse json data
 app.use(bodyparser.json());
 
+app.get("/", (req, res) => {
+  // Access the authenticated user's information
+  console.log("fdsfsd");
+  res.send("hey tisi hklfdsjaf");
+});
+
 // Importing routes
 const user = require("./route/user");
 
-// protected routes
-app.use(verifyToken);
 const journal = require("./route/journal");
 
 // Use user route when url matches /api/user/
 app.use("/user", user);
+
+// protected routes
+app.use(verifyToken);
 app.use("/journal", journal);
 
 // Protected route that requires authentication

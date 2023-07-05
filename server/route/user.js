@@ -11,8 +11,8 @@ const User = require("../model/user");
 router.post("/login", async (req, res) => {
   // Find user with requested email
 
-  const { name, email, password } = req.body;
-
+  const { email, password } = req.body;
+  console.log(email, password);
   const user = await User.findOne({ email });
   if (user === null) {
     return res.status(400).send({

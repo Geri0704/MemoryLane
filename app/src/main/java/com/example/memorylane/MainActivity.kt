@@ -38,10 +38,9 @@ import kotlinx.datetime.LocalDate
 import java.util.Calendar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import com.example.memorylane.ui.components.CustomCard
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,20 +98,6 @@ val MONTH_MAPPING: HashMap<String, String> = hashMapOf(
     "12" to "DEC",
 )
 
-@Composable
-fun ElevatedCard(modifier: Modifier = Modifier, content: @Composable() () -> Unit) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 10.dp
-        ),
-    ) {
-        content()
-    }
-}
-
-
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Base(modifier: Modifier = Modifier) {
@@ -123,6 +108,7 @@ fun Base(modifier: Modifier = Modifier) {
     var dateSelected by remember { mutableStateOf(CURRENT_DATE.toString())}
 
 //        TODO: fetch days with journal entries
+
     var events: List<KalendarEvent> = ArrayList()
     // get events from db
     for (entry in MOCK_ENTRIES) {
@@ -144,7 +130,7 @@ fun Base(modifier: Modifier = Modifier) {
             .verticalScroll(rememberScrollState())
             .padding(10.dp, 10.dp, 10.dp, 100.dp),
     ) {
-        ElevatedCard {
+        CustomCard {
             Box (
                 modifier = modifier
                     .height(400.dp)
@@ -174,7 +160,7 @@ fun Base(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = modifier.height(16.dp))
 
-        ElevatedCard (
+        CustomCard (
             modifier = modifier.fillMaxSize()
         ) {
             Column(
