@@ -8,7 +8,10 @@ import androidx.compose.material.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
@@ -21,13 +24,9 @@ import androidx.navigation.compose.rememberNavController
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun mainScreen() {
-    var loggedIn = true
+    var authToken = remember{ mutableStateOf("") }
 
-    fun logInSuccess() {
-        loggedIn = true
-    }
-
-    if (loggedIn) {
+    if (authToken.value != "") {
         val navController = rememberNavController()
         Scaffold(
             bottomBar = { BottomBar(navController = navController)}
@@ -35,7 +34,7 @@ fun mainScreen() {
             BottomNavGraph(navController = navController)
         }
     } else {
-        LogInPage(logInSuccess = { logInSuccess() })
+        LogInPage(token = authToken)
     }
 }
 

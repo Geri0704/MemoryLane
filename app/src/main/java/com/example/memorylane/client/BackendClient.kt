@@ -1,6 +1,7 @@
 package com.example.memorylane.client
 
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import com.example.memorylane.BuildConfig
 
 interface BackendEventListener : EventListener {
@@ -13,15 +14,13 @@ interface BackendResponseListener {
     fun onFailure(e: Exception)
 }
 
-class BackendClient(private val listener: BackendResponseListener) : BackendEventListener {
+class BackendClient() {
 
     private val BASE_URL = BuildConfig.BASE_URL
     private var token = ""
     private val client = HTTPClient()
 
-    private var requestId = 0
-
-    fun loginUser(email: String, password: String, requestId: Int = 0) {
+    fun loginUser(email: String, password: String, result: MutableState<String>) {
         val json = """
             {
                 "email": "$email",
@@ -29,17 +28,16 @@ class BackendClient(private val listener: BackendResponseListener) : BackendEven
             }
         """.trimIndent()
 
-        this.requestId = requestId
-
-        client.post(BASE_URL+"/user/login", token, json,this);
+        client.post(BASE_URL+"/user/login", token, json, result);
     }
 
-    override fun onSuccess(response: String) {
-        Log.d("fdasddasd", "dsadasdasdasdasdasdasdsdhklfsdjdksljfkl")
-        listener.onSuccess(response)
-    }
-
-    override fun onFailure(e: Exception) {
-        listener.onFailure(e)
-    }
+//
+//    override fun onSuccess(response: String) {
+//        Log.d("fdasddasd", "dsadasdasdasdasdasdasdsdhklfsdjdksljfkl")
+//        listener.onSuccess(response)
+//    }
+//
+//    override fun onFailure(e: Exception) {
+//        listener.onFailure(e)
+//    }
 }

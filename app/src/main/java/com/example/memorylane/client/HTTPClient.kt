@@ -47,8 +47,7 @@ class HTTPClient() {
     }
 
 
-    fun get(url: String, auth: String, listener : EventListener) {
-        Log.d("dsada", url)
+    fun get(url: String, auth: String, result: MutableState<String>) {
         val client = OkHttpClient()
 
         val request = Request.Builder()
@@ -59,26 +58,21 @@ class HTTPClient() {
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                listener.onFailure(e)
+                result.value = e.toString()
             }
 
             override fun onResponse(call: Call, response: Response) {
-                if (!response.isSuccessful) {
-                    println(response.body?.string())
-                    listener.onFailure(java.lang.Exception("Failed"))
-                }
-
                 val answer = response.body?.string()
                 if (answer != null) {
-                    listener.onSuccess(answer)
+                    result.value = answer
                 } else {
-                    listener.onFailure(java.lang.Exception("Failed"))
+                    result.value = ""
                 }
             }
         })
     }
 
-    fun post(url: String, auth: String, body: String, listener: EventListener) {
+    fun post(url: String, auth: String, body: String, result: MutableState<String>) {
         val client = OkHttpClient()
 
         val jsonBody = body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
@@ -92,20 +86,15 @@ class HTTPClient() {
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                listener.onFailure(e)
+                result.value = e.toString()
             }
 
             override fun onResponse(call: Call, response: Response) {
-                if (!response.isSuccessful) {
-                    println(response.body?.string())
-                    listener.onFailure(java.lang.Exception("Failed"))
-                }
-
                 val answer = response.body?.string()
                 if (answer != null) {
-                    listener.onSuccess(answer)
+                    result.value = answer
                 } else {
-                    listener.onFailure(java.lang.Exception("Failed"))
+                    result.value = ""
                 }
             }
         })

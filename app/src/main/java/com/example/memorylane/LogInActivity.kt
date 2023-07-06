@@ -1,64 +1,55 @@
 package com.example.memorylane
 
-import android.os.Bundle
-import android.os.ProxyFileDescriptorCallback
-import android.util.Log
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.memorylane.ui.theme.MemorylaneTheme
 import androidx.compose.material3.MaterialTheme
 import com.example.memorylane.ui.components.CustomCard
 import androidx.compose.material.*
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import com.example.memorylane.client.BackendClient
-import com.example.memorylane.client.BackendResponseListener
+import com.google.gson.Gson
 
-class LogInResponseListener : BackendResponseListener {
-    var response = ""
-    var error = ""
-    var success = false
-    override fun onSuccess(response: String) {
-        this.response = response
-        this.success = true
-    }
-    override fun onFailure(e: Exception) {
-        this.error = "error"
-    }
-}
+
+data class LogInResponse(val token: String = "", val message: String = "")
 
 @Composable
-fun LogInPage(modifier: Modifier = Modifier, logInSuccess: () -> Unit) {
+fun LogInPage(modifier: Modifier = Modifier, token: MutableState<String>) {
     val emailState = remember { mutableStateOf(TextFieldValue()) }
     val passwordState = remember { mutableStateOf(TextFieldValue()) }
-    val listener = remember{ mutableStateOf(LogInResponseListener())}
-    val client = remember{ mutableStateOf(BackendClient(listener.value))}
+    val client = BackendClient()
 
-    fun onLoginClicked(email: String, password: String) {
-        client.value.loginUser(email, password)
+    val response = remember {
+        mutableStateOf("")
     }
 
-    LaunchedEffect(listener.value.success) {
-        if (listener.value.success) {
-            logInSuccess()
+    var errMsg by remember { mutableStateOf("") }
+
+    val gson = Gson()
+    var logInResponse = gson.fromJson(response.value, LogInResponse::class.java)
+
+    if (logInResponse != null) {
+        if (logInResponse.token != "") {
+            token.value = logInResponse.token
+        } else {
+            errMsg = logInResponse.message
         }
+    }
+
+    fun onLoginClicked(email: String, password: String) {
+        client.loginUser(email, password, response)
     }
 
     Column(
