@@ -31,6 +31,10 @@ class BackendClient() {
         client.post(BASE_URL+"/user/login", token, json, result);
     }
 
+    fun getJournals(authToken: String, result: MutableState<String>) {
+        client.get(BASE_URL+"/journal", authToken, result);
+    }
+
 //
 //    override fun onSuccess(response: String) {
 //        Log.d("fdasddasd", "dsadasdasdasdasdasdasdsdhklfsdjdksljfkl")

@@ -1,6 +1,5 @@
 // Importing modules
 const mongoose = require("mongoose");
-var crypto = require("crypto");
 
 // Creating Journal schema
 const JournalSchema = mongoose.Schema({
@@ -16,16 +15,17 @@ const JournalSchema = mongoose.Schema({
     type: Number,
     required: true,
   },
-  date: {
-    type: String,
-    required: true,
-    unique: true,
-  },
   userEmail: {
     type: String,
     required: true,
   },
+  date: {
+    type: String,
+    required: true,
+  },
 });
+
+JournalSchema.index({ userEmail: 1, date: 1 }, { unique: true });
 
 // Exporting module to allow it to be imported in other files
 const Journal = mongoose.model("Journal", JournalSchema);

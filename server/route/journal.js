@@ -2,10 +2,26 @@
 const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
-const { secretKey } = require("../auth/utils");
 
 // // Importing Journal Schema
 const Journal = require("../model/journal");
+
+router.get("/", async (req, res, next) => {
+  const { email } = req.user;
+
+  const journals = await Journal.find({
+    userEmail: email,
+  });
+  try {
+    return res.status(201).send({
+      journals,
+    });
+  } catch (err) {
+    return res.status(400).send({
+      message: "Failed to fetch journals.",
+    });
+  }
+});
 
 router.post("/create", async (req, res, next) => {
   // Creating empty journal object
@@ -17,7 +33,9 @@ router.post("/create", async (req, res, next) => {
   (newJournal.prompt = prompt),
     (newJournal.userEmail = email),
     (newJournal.happiness = happiness),
-    (newJournal.date = new Date().toJSON().slice(0, 10)),
+    (newJournal.date = new Date(new Date().toLocaleDateString())
+      .toJSON()
+      .slice(0, 10)),
     (newJournal.content = content);
 
   // Save newJournal object to database
@@ -39,7 +57,10 @@ router.put("/edit", async (req, res) => {
   const { content, happiness } = req.body;
   const { email } = req.user;
 
-  const journal = await Journal.findOne({ userEmail: email, date });
+  const journal = await Journal.findOne({
+    userEmail: email,
+    date: new Date(new Date().toLocaleDateString()).toJSON().slice(0, 10),
+  });
   if (journal === null) {
     return res.status(400).send({
       message: "Journal not found.",
