@@ -12,6 +12,7 @@ import androidx.navigation.compose.composable
 fun BottomNavGraph(navController: NavHostController){
     NavHost(
         navController = navController,
+        route = Graph.HOME,
         startDestination = BottomBarScreen.Home.route
     ){
         composable(route = BottomBarScreen.Home.route){

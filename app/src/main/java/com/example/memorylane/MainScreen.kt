@@ -23,19 +23,12 @@ import androidx.navigation.compose.rememberNavController
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun mainScreen() {
-    var authToken = remember{ mutableStateOf("") }
-
-    if (authToken.value != "") {
-        val navController = rememberNavController()
-        Scaffold(
+fun mainScreen(navController: NavHostController = rememberNavController()) {
+     Scaffold(
             bottomBar = { BottomBar(navController = navController)}
         ) {
             BottomNavGraph(navController = navController)
         }
-    } else {
-        LogInPage(token = authToken)
-    }
 }
 
 @Composable

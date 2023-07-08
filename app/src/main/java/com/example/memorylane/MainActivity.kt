@@ -41,6 +41,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
+import androidx.navigation.compose.rememberNavController
 import com.example.memorylane.client.BackendClient
 import com.example.memorylane.ui.components.CustomCard
 import com.google.gson.Gson
@@ -51,7 +52,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MemorylaneTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    mainScreen()
+                    RootNavigationGraph(navController = rememberNavController())
                 }
             }
         }
