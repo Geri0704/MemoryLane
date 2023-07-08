@@ -5,13 +5,18 @@ import android.app.PendingIntent
 import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
+import android.content.res.Resources
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +24,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Surface
@@ -30,6 +37,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import java.time.LocalTime
@@ -53,31 +62,97 @@ class NotificationSettingsActivity : ComponentActivity() {
         }
     }
 }
-
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NotificationSettingsPage(context: Context, userPreferences: UserPreferences) {
-    var time by remember { mutableStateOf(LocalTime.parse(userPreferences.notificationTime)) } // change type to LocalTime
+    var time by remember { mutableStateOf(LocalTime.parse(userPreferences.notificationTime)) }
     val weekDays = listOf("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
     val selectedDays = userPreferences.notificationDays
     val daysOfWeek by remember {
         mutableStateOf(weekDays.map { CheckboxState(it, selectedDays.contains(it)) })
     }
+    var isCustomSelected by remember { mutableStateOf(false) }
+    var isWeekdaysOnlySelected by remember { mutableStateOf(false) }
+    var isWeekendsOnlySelected by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.padding(16.dp)
     ) {
-        Text("Select Days")
-        daysOfWeek.forEach { checkboxState ->
-            CheckboxItem(
-                text = checkboxState.name,
-                checked = checkboxState.checked
-            ) { isChecked ->
-                checkboxState.checked = isChecked
+        Text("Select Reminder Days")
+
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp)) {
+            Button(
+                onClick = {
+                    // Weekdays Only (Monday - Friday)
+                    daysOfWeek.forEach { checkboxState ->
+                        checkboxState.checked = checkboxState.name in listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
+                    }
+                    isCustomSelected = false
+                    isWeekdaysOnlySelected = true
+                    isWeekendsOnlySelected = false
+                },
+                enabled = !isWeekdaysOnlySelected,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Weekdays Only")
+            }
+
+            Spacer(Modifier.width(8.dp))
+
+            Button(
+                onClick = {
+                    // Weekends Only (Sunday, Saturday)
+                    daysOfWeek.forEach { checkboxState ->
+                        checkboxState.checked = checkboxState.name in listOf("Sunday", "Saturday")
+                    }
+                    isCustomSelected = false
+                    isWeekdaysOnlySelected = false
+                    isWeekendsOnlySelected = true
+                },
+                enabled = !isWeekendsOnlySelected,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Weekends Only")
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp)) {
+
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                onClick = {
+                    // Custom
+                    isCustomSelected = true
+                    isWeekdaysOnlySelected = false
+                    isWeekendsOnlySelected = false
+                },
+                enabled = !isCustomSelected
+            ) {
+                Text("Custom")
+            }
+        }
+
+        if (isCustomSelected) {
+            Spacer(Modifier.height(2.dp))
+            daysOfWeek.forEach { checkboxState ->
+                CheckboxItem(
+                    text = checkboxState.name,
+                    checked = checkboxState.checked
+                ) { isChecked ->
+                    checkboxState.checked = isChecked
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text("Select Reminder Time")
 
         Button(
             onClick = {
@@ -86,21 +161,41 @@ fun NotificationSettingsPage(context: Context, userPreferences: UserPreferences)
                 }
             }
         ) {
-            Text("Select Time: ${time.format(DateTimeFormatter.ofPattern("h:mm a"))}")
+            Text("Time: ${time.format(DateTimeFormatter.ofPattern("h:mm a"))}")
         }
 
+        Spacer(modifier = Modifier.weight(1f))
+
+        if (daysOfWeek.filter { it.checked }.map { it.name }.toSet() == userPreferences.notificationDays && time.format(DateTimeFormatter.ofPattern("HH:mm")) == userPreferences.notificationTime) {
+            Text("No changes made to notification settings.")
+        }
+
+        else {
+            Text(
+                text = "Reminders will be sent at ${time.format(DateTimeFormatter.ofPattern("h:mm a"))} on ${
+                    daysOfWeek.filter { it.checked }.map { it.name }.joinToString()
+                } once saved."
+            )
+        }
         Button(
             onClick = {
                 userPreferences.notificationTime = time.format(DateTimeFormatter.ofPattern("HH:mm"))
                 userPreferences.notificationDays = daysOfWeek.filter { it.checked }.map { it.name }.toSet()
                 scheduleNotifications(context, userPreferences)
-            }
+                context.startActivity(Intent(context, SettingsActivity::class.java))
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
         ) {
             Text("Save Settings")
         }
-
     }
 }
+
+
+
+
 
 class CheckboxState(val name: String, isChecked: Boolean) {
     var checked by mutableStateOf(isChecked)
