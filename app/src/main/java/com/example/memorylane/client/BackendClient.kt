@@ -20,7 +20,7 @@ class BackendClient() {
     private var token = ""
     private val client = HTTPClient()
 
-    fun loginUser(email: String, password: String, result: MutableState<String>) {
+    fun loginUser(email: String, password: String, onComplete: (String?, Exception?) -> Unit) {
         val json = """
             {
                 "email": "$email",
@@ -28,7 +28,7 @@ class BackendClient() {
             }
         """.trimIndent()
 
-        client.post(BASE_URL+"/user/login", token, json, result);
+        client.post(BASE_URL+"/user/login", token, json, onComplete);
     }
 
     fun getJournals(authToken: String, result: MutableState<String>) {

@@ -15,41 +15,48 @@ import com.example.memorylane.ui.components.CustomCard
 import androidx.compose.material.*
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import com.example.memorylane.client.BackendClient
 import com.google.gson.Gson
+import kotlinx.coroutines.launch
 
 
 data class LogInResponse(val token: String = "", val message: String = "")
 
 @Composable
-fun LogInPage(modifier: Modifier = Modifier, token: MutableState<String>) {
+fun LogInPage(
+    modifier: Modifier = Modifier,
+    token: MutableState<String>,
+    onLoginSuccessful: () -> Unit,
+    onCreateAccountClick: () -> Unit
+) {
     val emailState = remember { mutableStateOf(TextFieldValue()) }
     val passwordState = remember { mutableStateOf(TextFieldValue()) }
     val client = BackendClient()
 
-    val response = remember {
-        mutableStateOf("")
-    }
-
     var errMsg by remember { mutableStateOf("") }
 
-    val gson = Gson()
-    var logInResponse = gson.fromJson(response.value, LogInResponse::class.java)
-
-    if (logInResponse != null) {
-        if (logInResponse.token != "") {
-            token.value = logInResponse.token
-        } else {
-            errMsg = logInResponse.message
-        }
-    }
+    val scope = rememberCoroutineScope()
 
     fun onLoginClicked(email: String, password: String) {
-        client.loginUser(email, password, response)
+        client.loginUser(email, password) { logInResponse, exception ->
+            scope.launch {
+                if (exception != null) {
+                    errMsg = exception.toString()
+                }
+
+                val gson = Gson()
+                val logInResponseObject = gson.fromJson(logInResponse, LogInResponse::class.java)
+                if (!logInResponseObject?.token.isNullOrBlank()) {
+                    token.value = logInResponseObject.token
+                    onLoginSuccessful()
+                }
+            }
+        }
     }
 
     Column(
@@ -99,6 +106,16 @@ fun LogInPage(modifier: Modifier = Modifier, token: MutableState<String>) {
                 ) {
                     Text(text = "Log In")
                 }
+
+                Spacer(modifier = Modifier.height(5.dp))
+
+                Button(
+                    onClick = { onCreateAccountClick() },
+                    modifier = Modifier.fillMaxWidth()
+                ){
+                    Text(text = "Create Account")
+                }
+
             }
         }
     }

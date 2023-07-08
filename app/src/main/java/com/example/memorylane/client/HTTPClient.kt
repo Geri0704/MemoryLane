@@ -72,7 +72,7 @@ class HTTPClient() {
         })
     }
 
-    fun post(url: String, auth: String, body: String, result: MutableState<String>) {
+    fun post(url: String, auth: String, body: String, onComplete: (String?, Exception?) -> Unit) {
         val client = OkHttpClient()
 
         val jsonBody = body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
@@ -86,16 +86,12 @@ class HTTPClient() {
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                result.value = e.toString()
+                onComplete(null, e)
             }
 
             override fun onResponse(call: Call, response: Response) {
                 val answer = response.body?.string()
-                if (answer != null) {
-                    result.value = answer
-                } else {
-                    result.value = ""
-                }
+                onComplete(answer, null)
             }
         })
     }
