@@ -12,6 +12,9 @@ class JournalEntryDO : RealmObject {
     var date: String = ""
     var prompt: String = ""
     var entry: String = ""
-    var happiness: Float = 0f
+    var happinessRating: Float = 0f
     var themes: RealmList<String> = realmListOf()
+    var positives: RealmList<String> = realmListOf()
+    var negatives: RealmList<String> = realmListOf()
+    var workOn: RealmList<String> = realmListOf()
 }

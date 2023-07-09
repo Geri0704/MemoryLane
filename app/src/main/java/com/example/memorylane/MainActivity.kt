@@ -56,6 +56,27 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        setupGptRequestWork()
+    }
+
+    private fun setupGptRequestWork() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val repeatInterval = 1L
+        val repeatIntervalTimeUnit = TimeUnit.MINUTES
+
+        val gptRequestWorkRequest = PeriodicWorkRequestBuilder<AnalyticsWorker>(repeatInterval, repeatIntervalTimeUnit)
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "gptRequestWork",
+            ExistingPeriodicWorkPolicy.KEEP,
+            gptRequestWorkRequest
+        )
     }
 }
 
@@ -134,7 +155,7 @@ fun Base(modifier: Modifier = Modifier) {
             events += event
         }
     }
-    
+
 
     val kalendarColors: MutableList<KalendarColor> = ArrayList<KalendarColor>().toMutableList()
     for (i in 1 .. 12) {
@@ -194,6 +215,20 @@ fun Base(modifier: Modifier = Modifier) {
                     )
                     Spacer(modifier = modifier.height(16.dp))
                     Icon(imageVector = Icons.Default.Lock, contentDescription = "Lock Icon")
+                } else if (dateSelected.compareTo(CURRENT_DATE.toString()) == 0) {
+                    Text(
+                        text = "Looks like you haven't written your journal yet!",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = modifier.height(16.dp))
+                    Button(
+                        onClick = {
+                            val intent = Intent(context, JournalActivity::class.java)
+                            context.startActivity(intent)
+                        }
+                    ) {
+                        Text(text = "Next")
+                    }
                 } else {
                     var entryFound: JournalEntry? = null
                     for (entry in journalEntries) {
