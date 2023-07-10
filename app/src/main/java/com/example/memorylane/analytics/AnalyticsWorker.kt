@@ -20,7 +20,6 @@ import java.util.Date
 import java.util.Locale
 
 class AnalyticsWorker(context: Context, workerParameters: WorkerParameters) : Worker(context, workerParameters) {
-
     override fun doWork(): Result {
         try {
             val gptRequest = WorkerAIClient()
@@ -28,27 +27,27 @@ class AnalyticsWorker(context: Context, workerParameters: WorkerParameters) : Wo
             val config = RealmConfiguration.create(schema = setOf(JournalEntryDO::class))
             val realm = Realm.open(config)
 
-            val items: RealmResults<JournalEntryDO> = realm.query<JournalEntryDO>("themes.@size = 0 OR positives.@size = 0 OR negatives.@size = 0 OR workOn.@size = 0")
+            val items: RealmResults<JournalEntryDO> = realm.query<JournalEntryDO>("positives.@size = 0 OR negatives.@size = 0 OR workOn.@size = 0")
                 .sort("date", Sort.DESCENDING)
                 .find()
 
             if (items.isEmpty()) return Result.failure(workDataOf("Failed" to "No data needing analytics"))
 
             for (entry in items) {
-                println(entry)
-
                 val response = gptRequest.makeGptRequest(entry.entry)
 
                 println(response)
 
-                val positives = response.first
-                val negatives = response.second
-                val workOns = response.third
+                val positives = if (response.first.isNotEmpty()) response.first.map { it.capitalize() } else listOf("None recognized")
+                val negatives = if (response.second.isNotEmpty()) response.second.map { it.capitalize() } else listOf("None recognized")
+                val workOns = if (response.third.isNotEmpty()) response.third.map { it.capitalize() } else listOf("None recognized")
 
                 realm.writeBlocking {
-                    findLatest(entry)?.positives?.addAll(positives)
-                    findLatest(entry)?.negatives?.addAll(negatives)
-                    findLatest(entry)?.workOn?.addAll(workOns)
+                    findLatest(entry)?.apply {
+                        findLatest(entry)?.positives?.addAll(positives)
+                        findLatest(entry)?.negatives?.addAll(negatives)
+                        findLatest(entry)?.workOn?.addAll(workOns)
+                    }
                 }
             }
 
