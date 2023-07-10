@@ -1,22 +1,19 @@
 package com.example.memorylane
 
+import android.app.Activity
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
-import android.content.res.Resources
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.ContextThemeWrapper
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,7 +22,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Surface
@@ -37,14 +33,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import com.example.memorylane.ui.theme.MemorylaneTheme
-import java.lang.reflect.Array.set
 import java.util.Calendar
 
 class NotificationSettingsActivity : ComponentActivity() {
@@ -125,7 +120,7 @@ fun NotificationSettingsPage(context: Context, userPreferences: UserPreferences)
             Button(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
+                    .padding(vertical = 1.dp),
                 onClick = {
                     // Custom
                     isCustomSelected = true
@@ -139,7 +134,7 @@ fun NotificationSettingsPage(context: Context, userPreferences: UserPreferences)
         }
 
         if (isCustomSelected) {
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(1.dp))
             daysOfWeek.forEach { checkboxState ->
                 CheckboxItem(
                     text = checkboxState.name,
@@ -167,31 +162,55 @@ fun NotificationSettingsPage(context: Context, userPreferences: UserPreferences)
         Spacer(modifier = Modifier.weight(1f))
 
         if (daysOfWeek.filter { it.checked }.map { it.name }.toSet() == userPreferences.notificationDays && time.format(DateTimeFormatter.ofPattern("HH:mm")) == userPreferences.notificationTime) {
-            Text("No changes made to notification settings.")
+            Text(text="No changes made to notification settings.",
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                fontSize = 10.sp)
         }
 
         else {
             Text(
                 text = "Reminders will be sent at ${time.format(DateTimeFormatter.ofPattern("h:mm a"))} on ${
                     daysOfWeek.filter { it.checked }.map { it.name }.joinToString()
-                } once saved."
+                } once saved.",
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                fontSize = 10.sp
             )
-        }
-        Button(
-            onClick = {
-                userPreferences.notificationTime = time.format(DateTimeFormatter.ofPattern("HH:mm"))
-                userPreferences.notificationDays = daysOfWeek.filter { it.checked }.map { it.name }.toSet()
-                scheduleNotifications(context, userPreferences)
-                context.startActivity(Intent(context, SettingsActivity::class.java))
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-        ) {
-            Text("Save Settings")
+
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                Button(
+                    onClick = {
+                        userPreferences.notificationTime = time.format(DateTimeFormatter.ofPattern("HH:mm"))
+                        userPreferences.notificationDays = daysOfWeek.filter { it.checked }.map { it.name }.toSet()
+                        scheduleNotifications(context, userPreferences)
+                        (context as Activity).finish()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                        .weight(1f) // Assign equal weight to both button
+                ) {
+                    Text("Save")
+
+                }
+                Spacer(Modifier.width(8.dp))
+                Button(
+                    onClick = { (context as Activity).finish() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                        .weight(1f) // Assign equal weight to both buttons
+                ) {
+                    Text("Cancel")
+                }
+            }
         }
     }
-}
+
 
 
 
@@ -278,5 +297,15 @@ fun scheduleNotifications(context: Context, userPreferences: UserPreferences) {
     }
      Log.d("NotificationSettingsActivity", "Alarms scheduled for ${userPreferences.notificationDays} at ${userPreferences.notificationTime}")
 
+}
+
+
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+@Preview(showBackground = true)
+@Composable
+fun NotificationSettingsActivityPreview() {
+    MemorylaneTheme {
+        NotificationSettingsPage(userPreferences = UserPreferences(context = ContextThemeWrapper(LocalContext.current, R.style.Theme_Memorylane)), context= ContextThemeWrapper(LocalContext.current, R.style.Theme_Memorylane))
+    }
 }
 
