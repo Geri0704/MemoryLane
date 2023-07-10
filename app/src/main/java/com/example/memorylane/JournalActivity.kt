@@ -148,7 +148,7 @@ fun JournalPage(modifier: Modifier = Modifier) {
                             date = SimpleDateFormat("dd/MM", Locale.getDefault()).format(Date())
                             prompt = textFieldLabel
                             entry = journalEntry
-                            happiness = happiness
+                            happinessRating = happiness
                         })
                     }
                 }
