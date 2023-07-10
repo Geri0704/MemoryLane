@@ -141,30 +141,32 @@ fun Base(modifier: Modifier = Modifier) {
         client.getJournals(MOCK_TOKEN, response)
     }
 
-    var errMsg by remember { mutableStateOf("") }
-
-    val gson = Gson()
-    var journalResponse = gson.fromJson(response.value, JournalResponse::class.java)
-
-    if (journalResponse != null) {
-        if (journalResponse.message != "") {
-            errMsg = journalResponse.message
-        } else {
-            journalEntries = journalResponse.journals
-        }
-    }
-
+//    var errMsg by remember { mutableStateOf("") }
+//
+//    val gson = Gson()
+//    var journalResponse = gson.fromJson(response.value, JournalResponse::class.java)
+//
+//    if (journalResponse != null) {
+//        if (journalResponse.message != "") {
+//            errMsg = journalResponse.message
+//        } else {
+//            journalEntries = journalResponse.journals
+//        }
+//    }
+//
     var events: List<KalendarEvent> = ArrayList()
-    // get events from db
-    if (journalEntries.size != 0) {
-        for (entry in journalResponse.journals) {
-            val (year, month, day) = entry.date.split('-')
+//    // get events from db
+//    if (journalEntries.size != 0) {
+//        for (entry in journalResponse.journals) {
+//            val (year, month, day) = entry.date.split('-')
+//          TODO: change back when time
+            val (year, month, day) = "2022-07-10".split('-')
             val date = LocalDate(year.toInt(), month.toInt(), day.toInt())
-
+//
             val event = KalendarEvent(date, "test", "dse")
             events += event
-        }
-    }
+//        }
+//    }
 
 
     val kalendarColors: MutableList<KalendarColor> = ArrayList<KalendarColor>().toMutableList()

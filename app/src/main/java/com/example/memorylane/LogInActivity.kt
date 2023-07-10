@@ -49,19 +49,19 @@ fun LogInPage(
                     errMsg = exception.toString()
                 }
 
-                val gson = Gson()
-                val logInResponseObject =
-                    gson.fromJson(logInResponse?.body?.string(), LogInResponse::class.java)
-
-                if (logInResponse?.isSuccessful == true) {
-                    if (!logInResponseObject?.token.isNullOrBlank()) {
-                        token.value = logInResponseObject.token
-                        onLoginSuccessful()
-                    }
-                }
-                else {
-                    errMsg = logInResponseObject.message
-                }
+//                val gson = Gson()
+//                val logInResponseObject =
+//                    gson.fromJson(logInResponse?.body?.string(), LogInResponse::class.java)
+//
+//                if (logInResponse?.isSuccessful == true) {
+//                    if (!logInResponseObject?.token.isNullOrBlank()) {
+//                        token.value = logInResponseObject.token
+//                        onLoginSuccessful()
+//                    }
+//                }
+//                else {
+//                    errMsg = logInResponseObject.message
+//                }
             }
         }
     }
