@@ -6,7 +6,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
-import java.security.AuthProvider
 
 fun NavGraphBuilder.authNavGraph(navController: NavController){
     navigation(
@@ -27,7 +26,17 @@ fun NavGraphBuilder.authNavGraph(navController: NavController){
              )
          }
         composable(route = AuthScreen.CreateAccount.route){
-            AccountCreation()
+            var authToken = remember{ mutableStateOf("") }
+            AccountCreation(
+                token = authToken,
+                onCreateAccountSuccessful = {
+                    navController.popBackStack()
+                    navController.navigate(Graph.HOME)
+                },
+                onBackClick = {
+                    navController.navigate(AuthScreen.Login.route)
+                }
+            )
         }
     }
 }

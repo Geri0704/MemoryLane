@@ -47,10 +47,19 @@ router.post("/signup", async (req, res, next) => {
   // Save newUser object to database
   try {
     await newUser.save();
+    const token = jwt.sign({ email }, secretKey);
+    console.log(name, email, password);
     return res.status(201).send({
       message: "User added successfully.",
+      token,
     });
   } catch (err) {
+    console.log(err)
+    if (err.code === 11000){
+      return res.status(400).send({
+        message: "User already exists"
+      });
+    }
     return res.status(400).send({
       message: "Failed to add user.",
     });

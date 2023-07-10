@@ -50,10 +50,17 @@ fun LogInPage(
                 }
 
                 val gson = Gson()
-                val logInResponseObject = gson.fromJson(logInResponse, LogInResponse::class.java)
-                if (!logInResponseObject?.token.isNullOrBlank()) {
-                    token.value = logInResponseObject.token
-                    onLoginSuccessful()
+                val logInResponseObject =
+                    gson.fromJson(logInResponse?.body?.string(), LogInResponse::class.java)
+
+                if (logInResponse?.isSuccessful == true) {
+                    if (!logInResponseObject?.token.isNullOrBlank()) {
+                        token.value = logInResponseObject.token
+                        onLoginSuccessful()
+                    }
+                }
+                else {
+                    errMsg = logInResponseObject.message
                 }
             }
         }
@@ -97,6 +104,11 @@ fun LogInPage(
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                if (!errMsg.isNullOrBlank()) {
+                    Spacer(Modifier.height(16.dp))
+                    Text(text = errMsg, color = Color.Red)
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
