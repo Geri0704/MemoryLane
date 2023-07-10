@@ -29,12 +29,8 @@ import io.realm.kotlin.query.Sort
 fun AnalyticsPageParent() {
     var showWeeklyAnalytics by remember { mutableStateOf(false) }
 
-//    val entry = getEntry()
-//    val positives = getPositives()
-//    val negatives = getNegatives()
-//    val workOns = getWorkOns()
     val entries = getAllEntries()
-    var selectedEntry by remember { mutableStateOf(entries.first()) }
+    var selectedEntry by remember { mutableStateOf(entries.firstOrNull()) }
 
     val positives = getPositives(selectedEntry)
     val negatives = getNegatives(selectedEntry)
@@ -64,8 +60,8 @@ fun AnalyticsPageParent() {
             if (showWeeklyAnalytics) {
                 AnalyticsPage()
             } else {
-                DropdownMenu(entries = entries, selectedEntry = selectedEntry, onSelectedEntryChanged = { selectedEntry = it })
-                SpecificAnalyticsPage(selectedEntry.entry, positives, negatives, workOns)
+                selectedEntry?.let { DropdownMenu(entries = entries, selectedEntry = it, onSelectedEntryChanged = { selectedEntry = it }) }
+                SpecificAnalyticsPage(selectedEntry?.entry ?: "No entries yet...", positives, negatives, workOns)
             }
         }
     }
@@ -74,7 +70,7 @@ fun AnalyticsPageParent() {
 @Composable
 fun SpecificAnalyticsPage(entry: String, positives: List<String>, negatives: List<String>, workOn: List<String>) {
     Column(
-        modifier = Modifier.padding(16.dp).verticalScroll(rememberScrollState())
+        modifier = Modifier.padding(16.dp).verticalScroll(rememberScrollState()).padding(bottom = 64.dp)
     ) {
         Text(
             text = "Journal Entry",
@@ -94,10 +90,10 @@ fun SpecificAnalyticsPage(entry: String, positives: List<String>, negatives: Lis
         )
 
         ListDisplay(title = "Positives", items = positives)
-        Spacer(modifier = Modifier.height(16.dp))  // to add spacing between sections
+        Spacer(modifier = Modifier.height(16.dp))
 
         ListDisplay(title = "Negatives", items = negatives)
-        Spacer(modifier = Modifier.height(16.dp))  // to add spacing between sections
+        Spacer(modifier = Modifier.height(16.dp))
 
         ListDisplay(title = "Things to work on", items = workOn)
     }
@@ -136,12 +132,11 @@ fun ListDisplay(title: String, items: List<String>) {
 fun DropdownMenu(entries: List<JournalEntryDO>, selectedEntry: JournalEntryDO, onSelectedEntryChanged: (JournalEntryDO) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
 
-    // Create a map that groups entries by their date
     val entriesGroupedByDate = entries.groupBy { it.date }
 
     Box(modifier = Modifier.padding(16.dp)) {
         OutlinedTextField(
-            value = selectedEntry.date.toString(), // here you might want to format the date appropriately
+            value = selectedEntry.date.toString(),
             onValueChange = {},
             label = { Text(text = "Selected Journal Entry") },
             readOnly = true,
@@ -162,7 +157,7 @@ fun DropdownMenu(entries: List<JournalEntryDO>, selectedEntry: JournalEntryDO, o
                     expanded = false
                 }) {
                     Text(
-                        text = "${entry.date} (${order})", // here you might want to format the date appropriately
+                        text = "${entry.date} (${order})",
                         color = if (entry.id == selectedEntry.id) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface
                     )
                 }
@@ -171,61 +166,6 @@ fun DropdownMenu(entries: List<JournalEntryDO>, selectedEntry: JournalEntryDO, o
     }
 }
 
-//fun getEntry(): String {
-//    val config = RealmConfiguration.create(schema = setOf(JournalEntryDO::class))
-//    val realm = Realm.open(config)
-//    val items: RealmResults<JournalEntryDO> = realm.query<JournalEntryDO>().sort("date", Sort.DESCENDING)
-//        .limit(1)
-//        .find()
-//
-//    val entry: JournalEntryDO? = items.firstOrNull()
-//
-//    if (entry != null) {
-//        return entry.entry
-//    }
-//
-//    return "Failed to get entry..."
-//}
-//
-//fun getPositives(): List<String> {
-//    val config = RealmConfiguration.create(schema = setOf(JournalEntryDO::class))
-//    val realm = Realm.open(config)
-//    val items: RealmResults<JournalEntryDO> = realm.query<JournalEntryDO>()
-//        .sort("date", Sort.DESCENDING)
-//        .limit(1)
-//        .find()
-//
-//    val entry: JournalEntryDO? = items.firstOrNull()
-//
-//    return entry?.positives?.toList() ?: emptyList()
-//}
-//
-//fun getNegatives(): List<String> {
-//    val config = RealmConfiguration.create(schema = setOf(JournalEntryDO::class))
-//    val realm = Realm.open(config)
-//    val items: RealmResults<JournalEntryDO> = realm.query<JournalEntryDO>()
-//        .sort("date", Sort.DESCENDING)
-//        .limit(1)
-//        .find()
-//
-//    val entry: JournalEntryDO? = items.firstOrNull()
-//
-//    return entry?.negatives?.toList() ?: emptyList()
-//}
-//
-//fun getWorkOns(): List<String> {
-//    val config = RealmConfiguration.create(schema = setOf(JournalEntryDO::class))
-//    val realm = Realm.open(config)
-//    val items: RealmResults<JournalEntryDO> = realm.query<JournalEntryDO>()
-//        .sort("date", Sort.DESCENDING)
-//        .limit(1)
-//        .find()
-//
-//    val entry: JournalEntryDO? = items.firstOrNull()
-//
-//    return entry?.workOn?.toList() ?: emptyList()
-//}
-
 fun getAllEntries(): List<JournalEntryDO> {
     val config = RealmConfiguration.create(schema = setOf(JournalEntryDO::class))
     val realm = Realm.open(config)
@@ -233,14 +173,14 @@ fun getAllEntries(): List<JournalEntryDO> {
     return items.toList()
 }
 
-fun getPositives(entry: JournalEntryDO): List<String> {
-    return entry.positives?.toList() ?: emptyList()
+fun getPositives(entry: JournalEntryDO?): List<String> {
+    return entry?.positives?.toList() ?: emptyList()
 }
 
-fun getNegatives(entry: JournalEntryDO): List<String> {
-    return entry.negatives?.toList() ?: emptyList()
+fun getNegatives(entry: JournalEntryDO?): List<String> {
+    return entry?.negatives?.toList() ?: emptyList()
 }
 
-fun getWorkOns(entry: JournalEntryDO): List<String> {
-    return entry.workOn?.toList() ?: emptyList()
+fun getWorkOns(entry: JournalEntryDO?): List<String> {
+    return entry?.workOn?.toList() ?: emptyList()
 }
