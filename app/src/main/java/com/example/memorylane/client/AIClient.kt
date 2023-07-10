@@ -19,45 +19,6 @@ class AIClient(private val listener: GptResponseListener) : ClientGptResponseLis
     private var requestId = 0
 
     fun makeGptRequest(prompt: String, requestId: Int = 0) {
-//        val json = """
-//            {
-//                "model": "gpt-3.5-turbo-0613",
-//                "messages": [
-//                    {
-//                        "role": "system",
-//                        "content": "You are a helpful assistant."
-//                    },
-//                    {
-//                        "role": "user",
-//                        "content": "Today, I failed my test. Disappointed but determined to learn from this setback and improve next time."
-//                    },
-//                    {
-//                        "role": "user",
-//                        "content": "Embarrassing moment in class today. Answered with the wrong entry. Apologized and reminded myself to be more attentive and think before speaking up. Lesson learned."
-//                    }
-//                ],
-//                "functions": [
-//                    {
-//                      "name": "get_entry_themes",
-//                      "description": "Show recognized common themes between multiple journal entries",
-//                      "parameters": {
-//                        "type": "object",
-//                        "properties": {
-//                          "themes": {
-//                            "type": "array",
-//                            "items": {
-//                                "type": "string"
-//                            },
-//                            "description": "List of one word themes that represent common themes between the entries at a high level"
-//                          }
-//                        },
-//                        "required": ["themes"]
-//                      }
-//                    }
-//                  ]
-//            }
-//        """.trimIndent()
-
         val json = """
             {
                 "model": "gpt-3.5-turbo-0613",
@@ -73,36 +34,20 @@ class AIClient(private val listener: GptResponseListener) : ClientGptResponseLis
                 ],
                 "functions": [
                     {
-                      "name": "get_entry_analysis",
-                      "description": "Show analytics on journal entry",
+                      "name": "get_entry_themes",
+                      "description": "Show recognized themes in journal entry",
                       "parameters": {
                         "type": "object",
                         "properties": {
-                          "positives": {
+                          "themes": {
                             "type": "array",
                             "items": {
                                 "type": "string"
                             },
-                            "description": "List of high level positives from the journal entry"
-                          },
-                          
-                          "negatives": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            },
-                            "description": "List of high level negatives from the journal entry"
-                          },
-                          
-                          "workOn": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            },
-                            "description": "List of things to work on/try to tackle the negatives"
+                            "description": "List of one word themes that represent themes of entry at a high level"
                           }
                         },
-                        "required": ["positives", "negatives", "workOn"]
+                        "required": ["themes"]
                       }
                     }
                   ]

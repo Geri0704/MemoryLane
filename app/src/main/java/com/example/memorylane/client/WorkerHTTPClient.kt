@@ -4,10 +4,16 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 class WorkerHTTPClient {
     fun makeRequest(url: String, auth: String, body: String): String {
-        val client = OkHttpClient()
+        val client = OkHttpClient.Builder()
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .build()
+
 
         val jsonBody = body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 

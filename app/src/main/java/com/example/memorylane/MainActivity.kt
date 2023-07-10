@@ -45,6 +45,14 @@ import androidx.navigation.compose.rememberNavController
 import com.example.memorylane.client.BackendClient
 import com.example.memorylane.ui.components.CustomCard
 import com.google.gson.Gson
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.example.memorylane.analytics.AnalyticsWorker
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,10 +73,11 @@ class MainActivity : ComponentActivity() {
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
-        val repeatInterval = 1L
+        val repeatInterval = 15L
         val repeatIntervalTimeUnit = TimeUnit.MINUTES
 
         val gptRequestWorkRequest = PeriodicWorkRequestBuilder<AnalyticsWorker>(repeatInterval, repeatIntervalTimeUnit)
+//        val gptRequestWorkRequest = OneTimeWorkRequestBuilder<AnalyticsWorker>()
             .setConstraints(constraints)
             .build()
 
@@ -77,6 +86,7 @@ class MainActivity : ComponentActivity() {
             ExistingPeriodicWorkPolicy.KEEP,
             gptRequestWorkRequest
         )
+//        WorkManager.getInstance(this).enqueue(gptRequestWorkRequest)
     }
 }
 

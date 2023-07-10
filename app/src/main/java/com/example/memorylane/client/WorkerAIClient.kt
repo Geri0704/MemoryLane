@@ -36,7 +36,7 @@ class WorkerAIClient {
                             },
                             "description": "List of high level positives from the journal entry"
                           },
-                          
+
                           "negatives": {
                             "type": "array",
                             "items": {
@@ -44,7 +44,7 @@ class WorkerAIClient {
                             },
                             "description": "List of high level negatives from the journal entry"
                           },
-                          
+
                           "workOn": {
                             "type": "array",
                             "items": {
@@ -63,7 +63,60 @@ class WorkerAIClient {
         return parseResponse(client.makeRequest(URL, KEY, json))
     }
 
-    fun parseResponse(response: String): Triple<List<String>, List<String>, List<String>> {
+    fun makeWeekGptRequest(prompt: String): Triple<List<String>, List<String>, List<String>> {
+        val json = """{
+            "model": "gpt-3.5-turbo-0613",
+            "messages": [
+            {
+                "role": "system",
+                "content": "You are a helpful assistant."
+            },
+            {
+                "role": "user",
+                "content": "$prompt"
+            }
+            ],
+            "functions": [
+            {
+                "name": "get_entries_analysis",
+                "description": "Show common analytics on journal entries",
+                "parameters": {
+                "type": "object",
+                "properties": {
+                "positives": {
+                "type": "array",
+                "items": {
+                "type": "string"
+            },
+                "description": "List of high level positives that the journal entries have in common"
+            },
+
+                "negatives": {
+                "type": "array",
+                "items": {
+                "type": "string"
+            },
+                "description": "List of high level negatives that the journal entries have in common"
+            },
+
+                "workOn": {
+                "type": "array",
+                "items": {
+                "type": "string"
+            },
+                "description": "List of things to work on/try to tackle the negatives that are in common among all entries"
+            }
+            },
+                "required": ["positives", "negatives", "workOn"]
+            }
+            }
+            ]
+        }""".trimIndent()
+
+        return parseResponse(client.makeRequest(URL, KEY, json))
+    }
+
+    private fun parseResponse(response: String): Triple<List<String>, List<String>, List<String>> {
         val jsonObject = JSONObject(response)
         val choicesArray = jsonObject.getJSONArray("choices")
 
