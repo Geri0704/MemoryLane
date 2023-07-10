@@ -45,6 +45,14 @@ import androidx.navigation.compose.rememberNavController
 import com.example.memorylane.client.BackendClient
 import com.example.memorylane.ui.components.CustomCard
 import com.google.gson.Gson
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.example.memorylane.analytics.AnalyticsWorker
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,6 +64,29 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        setupGptRequestWork()
+    }
+
+    private fun setupGptRequestWork() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val repeatInterval = 15L
+        val repeatIntervalTimeUnit = TimeUnit.MINUTES
+
+        val gptRequestWorkRequest = PeriodicWorkRequestBuilder<AnalyticsWorker>(repeatInterval, repeatIntervalTimeUnit)
+//        val gptRequestWorkRequest = OneTimeWorkRequestBuilder<AnalyticsWorker>()
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "gptRequestWork",
+            ExistingPeriodicWorkPolicy.KEEP,
+            gptRequestWorkRequest
+        )
+//        WorkManager.getInstance(this).enqueue(gptRequestWorkRequest)
     }
 }
 
@@ -110,31 +141,33 @@ fun Base(modifier: Modifier = Modifier) {
         client.getJournals(MOCK_TOKEN, response)
     }
 
-    var errMsg by remember { mutableStateOf("") }
-
-    val gson = Gson()
-    var journalResponse = gson.fromJson(response.value, JournalResponse::class.java)
-
-    if (journalResponse != null) {
-        if (journalResponse.message != "") {
-            errMsg = journalResponse.message
-        } else {
-            journalEntries = journalResponse.journals
-        }
-    }
-
+//    var errMsg by remember { mutableStateOf("") }
+//
+//    val gson = Gson()
+//    var journalResponse = gson.fromJson(response.value, JournalResponse::class.java)
+//
+//    if (journalResponse != null) {
+//        if (journalResponse.message != "") {
+//            errMsg = journalResponse.message
+//        } else {
+//            journalEntries = journalResponse.journals
+//        }
+//    }
+//
     var events: List<KalendarEvent> = ArrayList()
-    // get events from db
-    if (journalEntries.size != 0) {
-        for (entry in journalResponse.journals) {
-            val (year, month, day) = entry.date.split('-')
+//    // get events from db
+//    if (journalEntries.size != 0) {
+//        for (entry in journalResponse.journals) {
+//            val (year, month, day) = entry.date.split('-')
+//          TODO: change back when time
+            val (year, month, day) = "2022-07-10".split('-')
             val date = LocalDate(year.toInt(), month.toInt(), day.toInt())
-
+//
             val event = KalendarEvent(date, "test", "dse")
             events += event
-        }
-    }
-    
+//        }
+//    }
+
 
     val kalendarColors: MutableList<KalendarColor> = ArrayList<KalendarColor>().toMutableList()
     for (i in 1 .. 12) {
@@ -194,6 +227,20 @@ fun Base(modifier: Modifier = Modifier) {
                     )
                     Spacer(modifier = modifier.height(16.dp))
                     Icon(imageVector = Icons.Default.Lock, contentDescription = "Lock Icon")
+                } else if (dateSelected.compareTo(CURRENT_DATE.toString()) == 0) {
+                    Text(
+                        text = "Looks like you haven't written your journal yet!",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = modifier.height(16.dp))
+                    Button(
+                        onClick = {
+                            val intent = Intent(context, JournalActivity::class.java)
+                            context.startActivity(intent)
+                        }
+                    ) {
+                        Text(text = "Next")
+                    }
                 } else {
                     var entryFound: JournalEntry? = null
                     for (entry in journalEntries) {

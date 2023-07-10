@@ -21,7 +21,7 @@ class AIClient(private val listener: GptResponseListener) : ClientGptResponseLis
     fun makeGptRequest(prompt: String, requestId: Int = 0) {
         val json = """
             {
-                "model": "gpt-3.5-turbo",
+                "model": "gpt-3.5-turbo-0613",
                 "messages": [
                     {
                         "role": "system",
@@ -31,7 +31,26 @@ class AIClient(private val listener: GptResponseListener) : ClientGptResponseLis
                         "role": "user",
                         "content": "$prompt"
                     }
-                ]
+                ],
+                "functions": [
+                    {
+                      "name": "get_entry_themes",
+                      "description": "Show recognized themes in journal entry",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {
+                          "themes": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "description": "List of one word themes that represent themes of entry at a high level"
+                          }
+                        },
+                        "required": ["themes"]
+                      }
+                    }
+                  ]
             }
         """.trimIndent()
 
@@ -42,6 +61,7 @@ class AIClient(private val listener: GptResponseListener) : ClientGptResponseLis
 
     override fun onSuccess(response: String) {
         val jsonObject = JSONObject(response)
+        println(jsonObject)
         val choicesArray = jsonObject.getJSONArray("choices")
 
         for (i in 0 until choicesArray.length()) {
