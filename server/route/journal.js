@@ -23,60 +23,71 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.post("/create", async (req, res, next) => {
-  // Creating empty journal object
-  let newJournal = new Journal();
-
-  const { prompt, content, happiness } = req.body;
-  const { email } = req.user;
-  // Initialize newJournal object with request data
-  (newJournal.prompt = prompt),
-    (newJournal.userEmail = email),
-    (newJournal.happiness = happiness),
-    (newJournal.date = new Date(new Date().toLocaleDateString())
-      .toJSON()
-      .slice(0, 10)),
-    (newJournal.content = content);
-
-  // Save newJournal object to database
-  try {
-    await newJournal.save();
-    return res.status(201).send({
-      message: "Journal added successfully.",
-    });
-  } catch (err) {
-    return res.status(400).send({
-      message: "Failed to add journal.",
-    });
-  }
-});
-
-router.put("/edit", async (req, res) => {
+router.post("/save", async (req, res) => {
   // Find journal with requested email
 
-  const { content, happiness } = req.body;
+  const {
+    prompt,
+    entry,
+    happinessRating,
+    themes,
+    positives,
+    negatives,
+    workOn,
+    date,
+  } = req.body;
+
   const { email } = req.user;
 
   const journal = await Journal.findOne({
     userEmail: email,
-    date: new Date(new Date().toLocaleDateString()).toJSON().slice(0, 10),
+    date: date,
   });
   if (journal === null) {
-    return res.status(400).send({
-      message: "Journal not found.",
-    });
+    // Creating empty journal object
+    let newJournal = new Journal();
+
+    const { email } = req.user;
+    // Initialize newJournal object with request data
+    (newJournal.prompt = prompt),
+      (newJournal.userEmail = email),
+      (newJournal.happinessRating = happinessRating),
+      (newJournal.date = date),
+      (newJournal.entry = entry),
+      (newJournal.themes = themes),
+      (newJournal.positives = positives),
+      (newJournal.negatives = negatives),
+      (newJournal.workOn = workOn);
+    // Save newJournal object to database
+    try {
+      await newJournal.save();
+      return res.status(201).send({
+        message: "Journal saved successfully.",
+      });
+    } catch (err) {
+      console.log(err);
+      return res.status(400).send({
+        message: "Failed to save journal.",
+      });
+    }
   } else {
-    (journal.happiness = happiness), (journal.content = content);
+    (journal.happinessRating = happinessRating),
+      (journal.entry = entry),
+      (journal.themes = themes),
+      (journal.positives = positives),
+      (journal.negatives = negatives),
+      (journal.workOn = workOn);
 
     // Save journal object to database
     try {
       await journal.save();
       return res.status(201).send({
-        message: "Journal added successfully.",
+        message: "Journal saved successfully.",
       });
     } catch (err) {
+      console.log(err);
       return res.status(400).send({
-        message: "Failed to add journal.",
+        message: "Failed to save journal.",
       });
     }
   }

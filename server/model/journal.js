@@ -7,11 +7,11 @@ const JournalSchema = mongoose.Schema({
     type: String,
     required: true,
   },
-  content: {
+  entry: {
     type: String,
     required: true,
   },
-  happiness: {
+  happinessRating: {
     type: Number,
     required: true,
   },
@@ -22,6 +22,22 @@ const JournalSchema = mongoose.Schema({
   date: {
     type: String,
     required: true,
+  },
+  themes: {
+    type: [String],
+    required: false,
+  },
+  positives: {
+    type: [String],
+    required: false,
+  },
+  negatives: {
+    type: [String],
+    required: false,
+  },
+  workOn: {
+    type: [String],
+    required: false,
   },
 });
 

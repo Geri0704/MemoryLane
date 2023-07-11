@@ -24,11 +24,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.memorylane.client.AIClient
+import com.example.memorylane.client.BackendClient
 import com.example.memorylane.data.JournalEntryDO
 import com.example.memorylane.ui.theme.MemorylaneTheme
 import com.google.accompanist.flowlayout.FlowRow
+import com.google.gson.Gson
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -86,9 +89,40 @@ class JournalActivity : ComponentActivity(), GptResponseListener {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+data class SaveJournalResponse(val message: String = "")
+
 @Composable
 fun JournalPage(modifier: Modifier = Modifier) {
+    val client = BackendClient()
+
+    var msg by remember { mutableStateOf("") }
+
+    val scope = rememberCoroutineScope()
+
+    fun saveToDB(journalToSave: JournalEntryDO) {
+        client.saveJournal(MOCK_TOKEN, journalToSave) { saveJournalResponse, exception ->
+            scope.launch {
+                if (exception != null) {
+                    msg = exception.toString()
+                }
+
+                val gson = Gson()
+                val saveJournalResponseObject =
+                    gson.fromJson(saveJournalResponse?.body?.string(), SaveJournalResponse::class.java)
+
+                if (saveJournalResponse?.isSuccessful == true) {
+                    msg = "Successfully saved journal to cloud"
+                }
+                else {
+                    msg = saveJournalResponseObject.message
+                }
+            }
+        }
+    }
+
+
+
+
     Column(
         modifier = modifier.padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -151,6 +185,15 @@ fun JournalPage(modifier: Modifier = Modifier) {
                             happinessRating = happiness
                         })
                     }
+
+                    val journalToSave = JournalEntryDO().apply {
+                        date = SimpleDateFormat("dd/MM", Locale.getDefault()).format(Date())
+                        prompt = textFieldLabel
+                        entry = journalEntry
+                        happinessRating = happiness
+                    }
+
+                    saveToDB(journalToSave)
                 }
 
                 val request = journalActivity.getString(R.string.ai_request_2)

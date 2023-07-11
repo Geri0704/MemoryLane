@@ -52,6 +52,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.memorylane.analytics.AnalyticsWorker
+import com.example.memorylane.data.JournalEntryResponseDO
 import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
@@ -90,17 +91,9 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-data class JournalEntry(
-    val date: String,
-    val prompt: String,
-    val content: String,
-    val happiness: Float,
-    val userEmail: String
-)
-
 data class JournalResponse(
     val message: String = "",
-    val journals: ArrayList<JournalEntry> = ArrayList<JournalEntry>()
+    val journals: ArrayList<JournalEntryResponseDO> = ArrayList()
 )
 
 val MONTH_MAPPING: HashMap<String, String> = hashMapOf(
@@ -128,7 +121,7 @@ fun Base(modifier: Modifier = Modifier) {
         Calendar.getInstance().get(Calendar.MONTH)+1,
         Calendar.getInstance().get(Calendar.DATE))
     var dateSelected by remember { mutableStateOf(CURRENT_DATE.toString())}
-    var journalEntries by remember { mutableStateOf(ArrayList<JournalEntry>()) }
+    var journalEntries by remember { mutableStateOf(ArrayList<JournalEntryResponseDO>()) }
 
     // API calls
     val client = BackendClient()
@@ -141,32 +134,32 @@ fun Base(modifier: Modifier = Modifier) {
         client.getJournals(MOCK_TOKEN, response)
     }
 
-//    var errMsg by remember { mutableStateOf("") }
-//
-//    val gson = Gson()
-//    var journalResponse = gson.fromJson(response.value, JournalResponse::class.java)
-//
-//    if (journalResponse != null) {
-//        if (journalResponse.message != "") {
-//            errMsg = journalResponse.message
-//        } else {
-//            journalEntries = journalResponse.journals
-//        }
-//    }
+    var errMsg by remember { mutableStateOf("") }
+
+    val gson = Gson()
+    var journalResponse = gson.fromJson(response.value, JournalResponse::class.java)
+
+    if (journalResponse != null) {
+        if (journalResponse.message != "") {
+            errMsg = journalResponse.message
+        } else {
+            journalEntries = journalResponse.journals
+        }
+    }
 //
     var events: List<KalendarEvent> = ArrayList()
 //    // get events from db
-//    if (journalEntries.size != 0) {
-//        for (entry in journalResponse.journals) {
-//            val (year, month, day) = entry.date.split('-')
+    if (journalEntries.size != 0) {
+        for (entry in journalResponse.journals) {
+            val (year, month, day) = entry.date.split('-')
 //          TODO: change back when time
-            val (year, month, day) = "2022-07-10".split('-')
+//            val (year, month, day) = "2022-07-10".split('-')
             val date = LocalDate(year.toInt(), month.toInt(), day.toInt())
-//
-            val event = KalendarEvent(date, "test", "dse")
+
+            val event = KalendarEvent(date, "test", "test")
             events += event
-//        }
-//    }
+        }
+    }
 
 
     val kalendarColors: MutableList<KalendarColor> = ArrayList<KalendarColor>().toMutableList()
@@ -242,7 +235,7 @@ fun Base(modifier: Modifier = Modifier) {
                         Text(text = "Next")
                     }
                 } else {
-                    var entryFound: JournalEntry? = null
+                    var entryFound: JournalEntryResponseDO? = null
                     for (entry in journalEntries) {
                         if (entry.date == dateSelected) {
                             entryFound = entry
@@ -256,11 +249,11 @@ fun Base(modifier: Modifier = Modifier) {
                         )
                         Spacer(modifier = modifier.height(16.dp))
                         Text(
-                            text = entryFound.content,
+                            text = entryFound.entry,
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Spacer(modifier = modifier.height(16.dp))
-                        Text(text = "Happiness: " + entryFound.happiness + " " + if (entryFound.happiness < 5f) "😞" else "😀")
+                        Text(text = "Happiness: " + entryFound.happinessRating + " " + if (entryFound.happinessRating < 5f) "😞" else "😀")
                         Spacer(modifier = modifier.height(16.dp))
 //                        Button(
 //                            onClick = {
