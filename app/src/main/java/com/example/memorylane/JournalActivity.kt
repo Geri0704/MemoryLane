@@ -53,9 +53,13 @@ class JournalActivity : ComponentActivity(), GptResponseListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val userPreferences = UserPreferences(applicationContext)
         gptRequest = AIClient(this)
-        gptRequest.makeGptRequest(getString(R.string.ai_request_1))
-        textFieldLabel = mutableStateOf("Loading prompt...")
+        textFieldLabel = mutableStateOf("")
+        if (userPreferences.aiPrompts) {
+            gptRequest.makeGptRequest(getString(R.string.ai_request_1))
+            textFieldLabel = mutableStateOf("Loading prompt...")
+        }
         journalThemes = mutableStateOf(listOf())
 
         val config = RealmConfiguration.create(schema = setOf(JournalEntryDO::class))
@@ -127,6 +131,8 @@ fun JournalPage(modifier: Modifier = Modifier) {
         modifier = modifier.padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        val context = LocalContext.current
+        val userPreferences = UserPreferences(context)
         // entry and happiness rating store
         var journalEntry by remember { mutableStateOf("") }
         var happiness by remember { mutableStateOf(5f) }
@@ -196,8 +202,10 @@ fun JournalPage(modifier: Modifier = Modifier) {
                     saveToDB(journalToSave)
                 }
 
-                val request = journalActivity.getString(R.string.ai_request_2)
-                gptRequest.makeGptRequest("$request $journalEntry", 1)
+                if (userPreferences.aiPrompts) {
+                    val request = journalActivity.getString(R.string.ai_request_2)
+                    gptRequest.makeGptRequest("$request $journalEntry", 1)
+                }
 
                 // val items: RealmResults<JournalEntryDO> = realm.query<JournalEntryDO>().find()
             },
