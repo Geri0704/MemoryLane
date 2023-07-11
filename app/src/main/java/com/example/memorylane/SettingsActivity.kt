@@ -13,7 +13,6 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
@@ -40,10 +39,13 @@ class SettingsActivity : ComponentActivity() {
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun SettingsPage(modifier: Modifier = Modifier) {
+fun SettingsPage() {
     val context = LocalContext.current
+    val userPreferences = UserPreferences(context)
+    var aiPromptsText by remember { mutableStateOf((if (userPreferences.aiPrompts) "Disable" else "Enable") + " AI Generated Prompts") }
+
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Column(
@@ -71,6 +73,12 @@ fun SettingsPage(modifier: Modifier = Modifier) {
                 Text(text = "Trigger Notification")
             }
 
+            Button(onClick = {
+                userPreferences.aiPrompts = !userPreferences.aiPrompts
+                aiPromptsText = (if (userPreferences.aiPrompts) "Disable" else "Enable") + " AI Generated Prompts"
+            }) {
+                Text(text = aiPromptsText)
+            }
 
             Button(onClick = {}) {
                 Icon(imageVector = Icons.Outlined.Close, contentDescription = "Close Icon")
