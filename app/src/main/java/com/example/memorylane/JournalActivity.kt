@@ -9,6 +9,7 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
@@ -32,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import coil.compose.AsyncImage
 import com.example.memorylane.client.AIClient
 import com.example.memorylane.client.BackendClient
 import com.example.memorylane.data.JournalEntryDO
@@ -44,6 +46,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.example.memorylane.client.WeatherClient
 
 interface GptResponseListener {
     fun onGptResponse(response: String)
@@ -61,8 +64,12 @@ class JournalActivity : ComponentActivity(), GptResponseListener, LocationListen
     lateinit var realm: Realm
 
     //location
+    lateinit var weatherClient: WeatherClient
     lateinit var locationManager: LocationManager
     lateinit var locationText: MutableState<String>
+    lateinit var weatherText: MutableState<String>
+    lateinit var weatherTemperature: MutableState<String>
+    lateinit var weatherIcon: MutableState<String>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -78,7 +85,12 @@ class JournalActivity : ComponentActivity(), GptResponseListener, LocationListen
         val config = RealmConfiguration.create(schema = setOf(JournalEntryDO::class))
         realm = Realm.open(config)
 
+        //location and weather
+        weatherClient = WeatherClient()
         locationText = mutableStateOf("")
+        weatherText = mutableStateOf("")
+        weatherTemperature = mutableStateOf("")
+        weatherIcon = mutableStateOf("")
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         if (ActivityCompat.checkSelfPermission(
                 this,
@@ -128,6 +140,19 @@ class JournalActivity : ComponentActivity(), GptResponseListener, LocationListen
         }
     }
 
+    data class WeatherConditionDetails(
+        val text: String,
+        val icon: String
+    )
+    data class CurrentWeatherDetails(
+        val temp_c: String,
+        val condition: WeatherConditionDetails
+    )
+    data class WeatherResponse(
+        val current: CurrentWeatherDetails,
+        val message: String
+    )
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onLocationChanged(location: Location) {
         val geocoder = Geocoder(baseContext, Locale.getDefault())
@@ -137,6 +162,24 @@ class JournalActivity : ComponentActivity(), GptResponseListener, LocationListen
                 //on success
                 if (addresses != null && addresses.isNotEmpty()) {
                     locationText.value = addresses[0].locality
+
+                    weatherClient.getWeather(locationText.value) { weatherResponse, exception ->
+                        if (exception != null) {
+                            weatherText.value = exception.toString()
+                        }
+
+                        val gson = Gson()
+                        val weatherResponseObject = gson.fromJson(weatherResponse?.body?.string(), WeatherResponse::class.java)
+
+                        if (weatherResponse?.isSuccessful == true) {
+                            weatherText.value = weatherResponseObject.current.condition.text
+                            weatherTemperature.value = weatherResponseObject.current.temp_c
+                            weatherIcon.value = weatherResponseObject.current.condition.icon
+                            Log.d("weather", weatherIcon.value)
+                        } else {
+                            weatherText.value = weatherResponseObject.message
+                        }
+                    }
                 }
             }
             override fun onError(errorMessage: String?) {
@@ -236,6 +279,12 @@ fun JournalPage(modifier: Modifier = Modifier) {
         }
 
         Text(text ="City: " + journalActivity.locationText.value)
+        Text(text ="Weather: "+ journalActivity.weatherText.value)
+        Text(text ="Temperature: "+ journalActivity.weatherTemperature.value)
+        AsyncImage(
+            model = "https:"+journalActivity.weatherIcon.value,
+            contentDescription = "current weather icon"
+        )
 
         Button(
             onClick = {
