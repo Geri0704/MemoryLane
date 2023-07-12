@@ -9,7 +9,6 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
@@ -175,7 +174,6 @@ class JournalActivity : ComponentActivity(), GptResponseListener, LocationListen
                             weatherText.value = weatherResponseObject.current.condition.text
                             weatherTemperature.value = weatherResponseObject.current.temp_c
                             weatherIcon.value = weatherResponseObject.current.condition.icon
-                            Log.d("weather", weatherIcon.value)
                         } else {
                             weatherText.value = weatherResponseObject.message
                         }
