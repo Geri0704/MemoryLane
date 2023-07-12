@@ -47,8 +47,8 @@ class BackendClient() {
 
         client.post(BASE_URL+"/user/signup", token, json, onComplete)
     }
-    fun getJournals(authToken: String, result: MutableState<String>) {
-        client.get(BASE_URL+"/journal", authToken, result);
+    fun getJournals(authToken: String, onComplete: (Response?, Exception?) -> Unit) {
+        client.get(BASE_URL+"/journal", authToken, onComplete);
     }
 
     fun saveJournal(authToken: String, journal: JournalEntryDO, onComplete: (Response?, Exception?) -> Unit){

@@ -41,6 +41,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.navigation.compose.rememberNavController
 import com.example.memorylane.client.BackendClient
 import com.example.memorylane.ui.components.CustomCard
@@ -52,7 +53,10 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.memorylane.analytics.AnalyticsWorker
+import com.example.memorylane.data.JournalEntryDO
 import com.example.memorylane.data.JournalEntryResponseDO
+import com.example.memorylane.workers.BackendWorker
+import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
@@ -77,6 +81,10 @@ class MainActivity : ComponentActivity() {
         val repeatInterval = 15L
         val repeatIntervalTimeUnit = TimeUnit.MINUTES
 
+        val dbUpdateWorkRequest = PeriodicWorkRequestBuilder<BackendWorker>(repeatInterval, repeatIntervalTimeUnit)
+            .setConstraints(constraints)
+            .build()
+
         val gptRequestWorkRequest = PeriodicWorkRequestBuilder<AnalyticsWorker>(repeatInterval, repeatIntervalTimeUnit)
 //        val gptRequestWorkRequest = OneTimeWorkRequestBuilder<AnalyticsWorker>()
             .setConstraints(constraints)
@@ -87,7 +95,13 @@ class MainActivity : ComponentActivity() {
             ExistingPeriodicWorkPolicy.KEEP,
             gptRequestWorkRequest
         )
-//        WorkManager.getInstance(this).enqueue(gptRequestWorkRequest)
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "dbUpdateWork",
+            ExistingPeriodicWorkPolicy.KEEP,
+            dbUpdateWorkRequest
+        )
+        WorkManager.getInstance(this).enqueue(gptRequestWorkRequest)
     }
 }
 
@@ -129,28 +143,32 @@ fun Base(modifier: Modifier = Modifier) {
     val response = remember {
         mutableStateOf("")
     }
+    var msg by remember { mutableStateOf("") }
 
     LaunchedEffect(response) {
-        client.getJournals(MOCK_TOKEN, response)
-    }
+        client.getJournals(MOCK_TOKEN) { journalResponse, exception ->
+            if (exception != null) {
+                msg = exception.toString()
+            }
 
-    var errMsg by remember { mutableStateOf("") }
+            val gson = Gson()
+            val journalResponseObject =
+                gson.fromJson(journalResponse?.body?.string(), JournalResponse::class.java)
 
-    val gson = Gson()
-    var journalResponse = gson.fromJson(response.value, JournalResponse::class.java)
-
-    if (journalResponse != null) {
-        if (journalResponse.message != "") {
-            errMsg = journalResponse.message
-        } else {
-            journalEntries = journalResponse.journals
+            if (journalResponse?.isSuccessful == true) {
+                msg = "Successfully saved journal to cloud"
+                journalEntries = journalResponseObject.journals
+            }
+            else {
+                msg = journalResponseObject.message
+            }
         }
     }
-//
+
     var events: List<KalendarEvent> = ArrayList()
 //    // get events from db
     if (journalEntries.size != 0) {
-        for (entry in journalResponse.journals) {
+        for (entry in journalEntries) {
             val (year, month, day) = entry.date.split('-')
 //          TODO: change back when time
 //            val (year, month, day) = "2022-07-10".split('-')

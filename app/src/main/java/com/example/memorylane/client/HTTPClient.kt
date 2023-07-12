@@ -47,7 +47,7 @@ class HTTPClient() {
     }
 
 
-    fun get(url: String, auth: String, result: MutableState<String>) {
+    fun get(url: String, auth: String, onComplete: (Response?, Exception?) -> Unit) {
         val client = OkHttpClient()
 
         val request = Request.Builder()
@@ -58,16 +58,11 @@ class HTTPClient() {
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                result.value = e.toString()
+                onComplete(null, e)
             }
 
             override fun onResponse(call: Call, response: Response) {
-                val answer = response.body?.string()
-                if (answer != null) {
-                    result.value = answer
-                } else {
-                    result.value = ""
-                }
+                onComplete(response, null)
             }
         })
     }
