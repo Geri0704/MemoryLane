@@ -30,4 +30,25 @@ class WorkerHTTPClient {
             return response.body?.string() ?: throw IOException("Response body is null")
         }
     }
+
+    fun get(url: String, auth: String): String {
+        val client = OkHttpClient.Builder()
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .build()
+
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .addHeader("Authorization", "Bearer $auth")
+            .addHeader("Content-Type", "application/json")
+            .build()
+
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw IOException("Unexpected code $response")
+
+            return response.body?.string() ?: throw IOException("Response body is null")
+        }
+    }
 }
