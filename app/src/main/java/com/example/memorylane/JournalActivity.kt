@@ -1,21 +1,29 @@
 package com.example.memorylane
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.location.Address
+import android.location.Geocoder
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.Text
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Slider
-import androidx.compose.material3.TextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +31,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import coil.compose.AsyncImage
 import com.example.memorylane.client.AIClient
 import com.example.memorylane.client.BackendClient
 import com.example.memorylane.data.JournalEntryDO
@@ -35,6 +45,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.example.memorylane.client.WeatherClient
 
 interface GptResponseListener {
     fun onGptResponse(response: String)
@@ -42,7 +53,7 @@ interface GptResponseListener {
     fun onGptFailure(e: Exception)
 }
 
-class JournalActivity : ComponentActivity(), GptResponseListener {
+class JournalActivity : ComponentActivity(), GptResponseListener, LocationListener {
     // AI
     lateinit var gptRequest: AIClient
     lateinit var textFieldLabel: MutableState<String>
@@ -50,6 +61,14 @@ class JournalActivity : ComponentActivity(), GptResponseListener {
 
     // DB
     lateinit var realm: Realm
+
+    //location
+    lateinit var weatherClient: WeatherClient
+    lateinit var locationManager: LocationManager
+    lateinit var locationText: MutableState<String>
+    lateinit var weatherText: MutableState<String>
+    lateinit var weatherTemperature: MutableState<String>
+    lateinit var weatherIcon: MutableState<String>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -64,6 +83,34 @@ class JournalActivity : ComponentActivity(), GptResponseListener {
 
         val config = RealmConfiguration.create(schema = setOf(JournalEntryDO::class))
         realm = Realm.open(config)
+
+        //location and weather
+        weatherClient = WeatherClient()
+        locationText = mutableStateOf("")
+        weatherText = mutableStateOf("")
+        weatherTemperature = mutableStateOf("")
+        weatherIcon = mutableStateOf("")
+        locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // Request runtime permissions if not granted
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ),
+                2
+            )
+        }
+        // Start listening for location updates
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 50000, 100f, this)
 
         setContent {
             MemorylaneTheme {
@@ -90,6 +137,55 @@ class JournalActivity : ComponentActivity(), GptResponseListener {
         runOnUiThread {
             textFieldLabel.value = "Failed to get prompt..."
         }
+    }
+
+    data class WeatherConditionDetails(
+        val text: String,
+        val icon: String
+    )
+    data class CurrentWeatherDetails(
+        val temp_c: String,
+        val condition: WeatherConditionDetails
+    )
+    data class WeatherResponse(
+        val current: CurrentWeatherDetails,
+        val message: String
+    )
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    override fun onLocationChanged(location: Location) {
+        val geocoder = Geocoder(baseContext, Locale.getDefault())
+        geocoder.getFromLocation(location.latitude, location.longitude,1, @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+        object : Geocoder.GeocodeListener{
+            override fun onGeocode(addresses: MutableList<Address>) {
+                //on success
+                if (addresses != null && addresses.isNotEmpty()) {
+                    locationText.value = addresses[0].locality
+
+                    weatherClient.getWeather(locationText.value) { weatherResponse, exception ->
+                        if (exception != null) {
+                            weatherText.value = exception.toString()
+                        }
+
+                        val gson = Gson()
+                        val weatherResponseObject = gson.fromJson(weatherResponse?.body?.string(), WeatherResponse::class.java)
+
+                        if (weatherResponse?.isSuccessful == true) {
+                            weatherText.value = weatherResponseObject.current.condition.text
+                            weatherTemperature.value = weatherResponseObject.current.temp_c
+                            weatherIcon.value = weatherResponseObject.current.condition.icon
+                        } else {
+                            weatherText.value = weatherResponseObject.message
+                        }
+                    }
+                }
+            }
+            override fun onError(errorMessage: String?) {
+                super.onError(errorMessage)
+                locationText.value = "Failed to get city location..."
+            }
+
+        })
     }
 }
 
@@ -179,6 +275,14 @@ fun JournalPage(modifier: Modifier = Modifier) {
             )
             Text("😀")
         }
+
+        Text(text ="City: " + journalActivity.locationText.value)
+        Text(text ="Weather: "+ journalActivity.weatherText.value)
+        Text(text ="Temperature: "+ journalActivity.weatherTemperature.value)
+        AsyncImage(
+            model = "https:"+journalActivity.weatherIcon.value,
+            contentDescription = "current weather icon"
+        )
 
         Button(
             onClick = {
