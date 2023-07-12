@@ -160,7 +160,9 @@ fun Base(modifier: Modifier = Modifier) {
                 journalEntries = journalResponseObject.journals
             }
             else {
-                msg = journalResponseObject.message
+                if(journalResponseObject?.message != null) {
+                    msg = journalResponseObject.message
+                }
             }
         }
     }
