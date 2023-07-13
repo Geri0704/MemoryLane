@@ -68,7 +68,7 @@ fun SettingsPage() {
             }
 
             Button(onClick = {
-                ReminderBroadcast().sendNotification(context)
+                ReminderBroadcast().sendNotification(context, "Test Title", "Test Message")
             }) {
                 Text(text = "Trigger Notification")
             }
