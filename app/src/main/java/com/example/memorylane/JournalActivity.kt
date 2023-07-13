@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import coil.compose.AsyncImage
 import com.example.memorylane.client.AIClient
@@ -56,7 +57,7 @@ interface GptResponseListener {
 class JournalActivity : ComponentActivity(), GptResponseListener, LocationListener {
     // AI
     lateinit var gptRequest: AIClient
-    lateinit var textFieldLabel: MutableState<String>
+    var textFieldLabel = mutableStateOf("Tell me about your day!")
     lateinit var journalThemes: MutableState<List<String>>
 
     // DB
@@ -74,11 +75,6 @@ class JournalActivity : ComponentActivity(), GptResponseListener, LocationListen
 
         val userPreferences = UserPreferences(applicationContext)
         gptRequest = AIClient(this)
-        textFieldLabel = mutableStateOf("")
-        if (userPreferences.aiPrompts) {
-            gptRequest.makeGptRequest(getString(R.string.ai_request_1))
-            textFieldLabel = mutableStateOf("Loading prompt...")
-        }
         journalThemes = mutableStateOf(listOf())
 
         val config = RealmConfiguration.create(schema = setOf(JournalEntryDO::class))
@@ -233,7 +229,7 @@ fun JournalPage(modifier: Modifier = Modifier) {
         var journalEntry by remember { mutableStateOf("") }
         var happiness by remember { mutableStateOf(5f) }
         val journalActivity = LocalContext.current as JournalActivity
-        val textFieldLabel = journalActivity.textFieldLabel.value
+        val textFieldLabel by remember { journalActivity.textFieldLabel }
         val realm = journalActivity.realm
         val journalThemes = journalActivity.journalThemes.value
         val gptRequest = journalActivity.gptRequest
@@ -255,6 +251,15 @@ fun JournalPage(modifier: Modifier = Modifier) {
                     .align(Alignment.BottomEnd)
                     .padding(6.dp)
             )
+
+            if (userPreferences.aiPrompts) {
+                Button(onClick = {
+                    gptRequest.makeGptRequest(journalActivity.getString(R.string.ai_request_1))
+                    journalActivity.textFieldLabel.value = "Loading prompt..."
+                }, modifier = Modifier.align(Alignment.BottomStart).padding(6.dp).height(30.dp)) {
+                    Text("Need prompt help?", fontSize = 10.sp)
+                }
+            }
         }
 
         Spacer(modifier = modifier.height(16.dp))
