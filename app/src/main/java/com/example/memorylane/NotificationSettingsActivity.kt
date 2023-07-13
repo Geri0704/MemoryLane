@@ -160,24 +160,28 @@ fun NotificationSettingsPage(context: Context, userPreferences: UserPreferences)
         }
 
         Spacer(modifier = Modifier.weight(1f))
-
-        if (daysOfWeek.filter { it.checked }.map { it.name }.toSet() == userPreferences.notificationDays && time.format(DateTimeFormatter.ofPattern("HH:mm")) == userPreferences.notificationTime) {
-            Text(text="No changes made to notification settings.",
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                fontSize = 10.sp)
+        val days = daysOfWeek.filter { it.checked }.map { it.name }
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally // Center the children horizontally
+        ) {
+            if (days.toSet() == userPreferences.notificationDays && time.format(DateTimeFormatter.ofPattern("HH:mm")) == userPreferences.notificationTime) {
+                Text(
+                    text = "Reminders set to ${time.format(DateTimeFormatter.ofPattern("h:mm a"))} on ${days.joinToString()}.",
+                    fontSize = 10.sp,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            } else {
+                Text(
+                    text = "Reminders will be sent at ${time.format(DateTimeFormatter.ofPattern("h:mm a"))} on ${
+                        days.joinToString()
+                    } once saved.",
+                    fontSize = 10.sp,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
         }
 
-        else {
-            Text(
-                text = "Reminders will be sent at ${time.format(DateTimeFormatter.ofPattern("h:mm a"))} on ${
-                    daysOfWeek.filter { it.checked }.map { it.name }.joinToString()
-                } once saved.",
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                fontSize = 10.sp
-            )
-
-            }
-            Row(
+        Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
@@ -210,11 +214,6 @@ fun NotificationSettingsPage(context: Context, userPreferences: UserPreferences)
             }
         }
     }
-
-
-
-
-
 
 class CheckboxState(val name: String, isChecked: Boolean) {
     var checked by mutableStateOf(isChecked)
@@ -304,8 +303,9 @@ fun scheduleNotifications(context: Context, userPreferences: UserPreferences) {
 @Preview(showBackground = true)
 @Composable
 fun NotificationSettingsActivityPreview() {
+    var context = ContextThemeWrapper(LocalContext.current, R.style.Theme_Memorylane)
     MemorylaneTheme {
-        NotificationSettingsPage(userPreferences = UserPreferences(context = ContextThemeWrapper(LocalContext.current, R.style.Theme_Memorylane)), context= ContextThemeWrapper(LocalContext.current, R.style.Theme_Memorylane))
+        NotificationSettingsPage(userPreferences = UserPreferences(context = context ), context= context)
     }
 }
 
