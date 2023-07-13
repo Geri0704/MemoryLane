@@ -37,6 +37,11 @@ router.post("/save", async (req, res) => {
     date,
   } = req.body;
 
+  if (date.length !== 10)
+    return res.status(400).send({
+      message: "Failed to save journal.",
+    });
+
   const { email } = req.user;
 
   const journal = await Journal.findOne({
@@ -131,7 +136,9 @@ router.post("/save_multiple", async (req, res) => {
           upsert: true,
         },
       };
-      bulkOps.push(upsertDoc);
+      if (date.length === 10) {
+        bulkOps.push(upsertDoc);
+      }
     }
   );
   try {
