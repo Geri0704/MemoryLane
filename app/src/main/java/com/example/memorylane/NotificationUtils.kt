@@ -1,5 +1,6 @@
 package com.example.memorylane
 
+import NotificationRepository
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -16,28 +17,28 @@ import androidx.core.app.NotificationManagerCompat
 class ReminderBroadcast : BroadcastReceiver() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onReceive(context: Context, intent: Intent) {
-        sendNotification(context)
+        val title = intent.getStringExtra("title") ?: ""
+        val message = intent.getStringExtra("message") ?: ""
+        sendNotification(context, title, message)
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    fun sendNotification(context: Context) {
+    fun sendNotification(context: Context, title: String, message: String) {
         val builder = NotificationCompat.Builder(context, "com.example.memorylane")
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Daily Reminder")
-            .setContentText("It's time to open the app and jot down your memories.")
+            .setContentTitle(title)
+            .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setContentIntent(createPendingIntent(context)) // Set the PendingIntent here
+            .setContentIntent(createPendingIntent(context))
 
         createNotificationChannel(context)
 
         with(NotificationManagerCompat.from(context)) {
-            // Permission check for notifications
             if (ActivityCompat.checkSelfPermission(
                     context,
                     Manifest.permission.POST_NOTIFICATIONS
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
-                // Request permission if not already granted
                 ActivityCompat.requestPermissions(
                     context as MainActivity,
                     arrayOf(Manifest.permission.POST_NOTIFICATIONS),
@@ -45,6 +46,7 @@ class ReminderBroadcast : BroadcastReceiver() {
                 )
             }
             notify(200, builder.build())
+            NotificationRepository.addNotification(Notification(title, message))
         }
     }
 
@@ -67,3 +69,5 @@ class ReminderBroadcast : BroadcastReceiver() {
         }
     }
 }
+
+data class Notification(val title: String, val message: String)
