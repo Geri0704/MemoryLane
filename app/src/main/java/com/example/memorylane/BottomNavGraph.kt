@@ -1,12 +1,14 @@
 package com.example.memorylane
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Surface
+import NotificationInboxPage
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun BottomNavGraph(navController: NavHostController) {
     NavHost(
@@ -18,7 +20,7 @@ fun BottomNavGraph(navController: NavHostController) {
             Base()
         }
         composable(route = BottomBarScreen.Notifications.route) {
-            //Add notifications composable once we make the screen
+            NotificationInboxPage()
         }
         composable(route = BottomBarScreen.Settings.route) {
             SettingsPage()
