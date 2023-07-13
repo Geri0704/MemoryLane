@@ -182,38 +182,43 @@ fun NotificationSettingsPage(context: Context, userPreferences: UserPreferences)
         }
 
         Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+        ) {
+            Button(
+                onClick = {
+                    userPreferences.notificationTime = time.format(DateTimeFormatter.ofPattern("HH:mm"))
+                    userPreferences.notificationDays = daysOfWeek.filter { it.checked }.map { it.name }.toSet()
+
+                    val title = "Reminder to Journal"
+                    val message = "Click here to begin your journal!"
+
+                    scheduleNotifications(context, userPreferences, title, message)
+                    (context as Activity).finish()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
+                    .weight(1f)
             ) {
-                Button(
-                    onClick = {
-                        userPreferences.notificationTime = time.format(DateTimeFormatter.ofPattern("HH:mm"))
-                        userPreferences.notificationDays = daysOfWeek.filter { it.checked }.map { it.name }.toSet()
-                        scheduleNotifications(context, userPreferences)
-                        (context as Activity).finish()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                        .weight(1f) // Assign equal weight to both button
-                ) {
-                    Text("Save")
+                Text("Save")
+            }
 
-                }
-                Spacer(Modifier.width(8.dp))
-                Button(
-                    onClick = { (context as Activity).finish() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                        .weight(1f) // Assign equal weight to both buttons
-                ) {
-                    Text("Cancel")
-                }
+            Spacer(Modifier.width(8.dp))
+
+            Button(
+                onClick = { (context as Activity).finish() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .weight(1f) // Assign equal weight to both buttons
+            ) {
+                Text("Cancel")
             }
         }
     }
+}
 
 class CheckboxState(val name: String, isChecked: Boolean) {
     var checked by mutableStateOf(isChecked)
@@ -252,10 +257,14 @@ fun showTimePicker(context: Context, currentTime: LocalTime, onTimeSelected: (Lo
     )
     timePickerDialog.show()
 }
+
 @RequiresApi(Build.VERSION_CODES.O)
-fun scheduleNotifications(context: Context, userPreferences: UserPreferences) {
+fun scheduleNotifications(context: Context, userPreferences: UserPreferences, title: String, message: String) {
     val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-    val intent = Intent(context, ReminderBroadcast::class.java)
+    val intent = Intent(context, ReminderBroadcast::class.java).apply {
+        putExtra("title", title)
+        putExtra("message", message)
+    }
 
     // Define weekDays inside the function
     val weekDays = listOf("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
