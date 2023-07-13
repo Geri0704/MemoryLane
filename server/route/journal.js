@@ -72,6 +72,7 @@ router.post("/save", async (req, res) => {
     }
   } else {
     (journal.happinessRating = happinessRating),
+      (journal.prompt = prompt),
       (journal.entry = entry),
       (journal.themes = themes),
       (journal.positives = positives),
@@ -90,6 +91,59 @@ router.post("/save", async (req, res) => {
         message: "Failed to save journal.",
       });
     }
+  }
+});
+
+router.post("/save_multiple", async (req, res) => {
+  // Find journal with requested email
+
+  const { journals } = req.body;
+
+  const { email } = req.user;
+
+  var bulkOps = [];
+
+  journals.forEach(
+    ({
+      prompt,
+      entry,
+      happinessRating,
+      themes,
+      positives,
+      negatives,
+      workOn,
+      date,
+    }) => {
+      let upsertDoc = {
+        updateOne: {
+          filter: { userEmail: email, date },
+          update: {
+            $set: {
+              prompt,
+              entry,
+              happinessRating,
+              themes,
+              positives,
+              negatives,
+              workOn,
+            },
+          },
+          upsert: true,
+        },
+      };
+      bulkOps.push(upsertDoc);
+    }
+  );
+  try {
+    await Journal.collection.bulkWrite(bulkOps);
+    return res.status(200).send({
+      message: "Sucessfully saved journals.",
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(400).send({
+      message: "Failed to save journals.",
+    });
   }
 });
 

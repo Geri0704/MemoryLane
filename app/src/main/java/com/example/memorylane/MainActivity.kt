@@ -101,7 +101,9 @@ class MainActivity : ComponentActivity() {
             ExistingPeriodicWorkPolicy.KEEP,
             dbUpdateWorkRequest
         )
+
         WorkManager.getInstance(this).enqueue(gptRequestWorkRequest)
+//        WorkManager.getInstance(this).enqueue(dbUpdateWorkRequest)
     }
 }
 
