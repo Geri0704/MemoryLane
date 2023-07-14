@@ -14,6 +14,10 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
 class ReminderBroadcast : BroadcastReceiver() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onReceive(context: Context, intent: Intent) {
@@ -70,4 +74,11 @@ class ReminderBroadcast : BroadcastReceiver() {
     }
 }
 
-data class Notification(val title: String, val message: String)
+data class Notification(
+    val title: String,
+    val message: String,
+    val receivedAt: String = SimpleDateFormat("yyyy-MM-dd hh:mm:ss a", Locale.getDefault()).format(
+        Date()
+    )
+)
+
