@@ -1,5 +1,6 @@
 package com.example.memorylane
 
+import NotificationRepository
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -9,7 +10,6 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
@@ -41,7 +41,6 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.navigation.compose.rememberNavController
 import com.example.memorylane.client.BackendClient
 import com.example.memorylane.ui.components.CustomCard
@@ -49,14 +48,11 @@ import com.google.gson.Gson
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.memorylane.analytics.AnalyticsWorker
-import com.example.memorylane.data.JournalEntryDO
 import com.example.memorylane.data.JournalEntryResponseDO
 import com.example.memorylane.workers.BackendWorker
-import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
@@ -71,6 +67,7 @@ class MainActivity : ComponentActivity() {
         }
 
         setupGptRequestWork()
+        NotificationRepository.initialize(this)
     }
 
     private fun setupGptRequestWork() {
