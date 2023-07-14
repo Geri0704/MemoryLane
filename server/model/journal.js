@@ -22,6 +22,8 @@ const JournalSchema = mongoose.Schema({
   date: {
     type: String,
     required: true,
+    minlength: 10,
+    maxlength: 10,
   },
   themes: {
     type: [String],
@@ -40,6 +42,10 @@ const JournalSchema = mongoose.Schema({
     required: false,
   },
 });
+
+JournalSchema.path("date").validate(function (date) {
+  return date?.length === 10;
+}, "Journal date must be 10 characters");
 
 JournalSchema.index({ userEmail: 1, date: 1 }, { unique: true });
 

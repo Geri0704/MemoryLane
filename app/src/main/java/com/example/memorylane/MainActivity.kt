@@ -98,7 +98,9 @@ class MainActivity : ComponentActivity() {
             ExistingPeriodicWorkPolicy.KEEP,
             dbUpdateWorkRequest
         )
+
         WorkManager.getInstance(this).enqueue(gptRequestWorkRequest)
+//        WorkManager.getInstance(this).enqueue(dbUpdateWorkRequest)
     }
 }
 
@@ -168,13 +170,17 @@ fun Base(modifier: Modifier = Modifier) {
 //    // get events from db
     if (journalEntries.size != 0) {
         for (entry in journalEntries) {
-            val (year, month, day) = entry.date.split('-')
+            try {
+                val (year, month, day) = entry.date.split('-')
 //          TODO: change back when time
 //            val (year, month, day) = "2022-07-10".split('-')
-            val date = LocalDate(year.toInt(), month.toInt(), day.toInt())
+                val date = LocalDate(year.toInt(), month.toInt(), day.toInt())
 
-            val event = KalendarEvent(date, "test", "test")
-            events += event
+                val event = KalendarEvent(date, "test", "test")
+                events += event
+            } catch(e: Exception) {
+                println("Did not parse date correctly")
+            }
         }
     }
 
