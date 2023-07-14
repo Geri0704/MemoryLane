@@ -4,6 +4,8 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -16,7 +18,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withAnnotation
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.example.memorylane.data.JournalEntryDO
 import io.realm.kotlin.Realm
@@ -32,15 +42,13 @@ fun AnalyticsPageParent() {
     val entries = getAllEntries()
     var selectedEntry by remember { mutableStateOf(entries.firstOrNull()) }
 
-    val positives = getPositives(selectedEntry)
-    val negatives = getNegatives(selectedEntry)
-    val workOns = getWorkOns(selectedEntry)
-
     MaterialTheme(
         colors = if (MaterialTheme.colors.isLight) lightColors() else darkColors(),
     ) {
         Column {
-            Row(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)) {
                 Button(
                     onClick = { showWeeklyAnalytics = false },
                     colors = ButtonDefaults.buttonColors(backgroundColor = if (showWeeklyAnalytics) Color.Gray else MaterialTheme.colors.primary),
@@ -61,16 +69,24 @@ fun AnalyticsPageParent() {
                 AnalyticsPage()
             } else {
                 selectedEntry?.let { DropdownMenu(entries = entries, selectedEntry = it, onSelectedEntryChanged = { selectedEntry = it }) }
-                SpecificAnalyticsPage(selectedEntry?.entry ?: "No entries yet...", positives, negatives, workOns)
+                SpecificAnalyticsPage(selectedEntry?.entry ?: "No entries yet...", selectedEntry)
             }
         }
     }
 }
 
 @Composable
-fun SpecificAnalyticsPage(entry: String, positives: List<String>, negatives: List<String>, workOn: List<String>) {
+fun SpecificAnalyticsPage(entry: String, selectedEntry: JournalEntryDO?) {
+    var positives by remember { mutableStateOf(getPositives(selectedEntry)) }
+    var negatives by remember { mutableStateOf(getNegatives(selectedEntry)) }
+    var workOns by remember { mutableStateOf(getWorkOns(selectedEntry)) }
+
     Column(
-        modifier = Modifier.padding(16.dp).verticalScroll(rememberScrollState()).padding(bottom = 64.dp)
+        modifier = Modifier
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 64.dp)
+            .fillMaxWidth()
     ) {
         Text(
             text = "Journal Entry",
@@ -89,13 +105,84 @@ fun SpecificAnalyticsPage(entry: String, positives: List<String>, negatives: Lis
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
+        Button(onClick = {
+            clearAnalyticsForEntry(selectedEntry)
+            positives = getPositives(selectedEntry)
+            negatives = getNegatives(selectedEntry)
+            workOns = getWorkOns(selectedEntry)
+        },
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF90EE90))
+        ) {
+            Text("Reanalyze?")
+        }
+
         ListDisplay(title = "Positives", items = positives)
         Spacer(modifier = Modifier.height(16.dp))
 
         ListDisplay(title = "Negatives", items = negatives)
         Spacer(modifier = Modifier.height(16.dp))
 
-        ListDisplay(title = "Things to work on", items = workOn)
+        ListDisplay(title = "Things to work on", items = workOns)
+
+        EmergencyContact()
+    }
+}
+
+@OptIn(ExperimentalTextApi::class)
+@Composable
+fun EmergencyContact() {
+    var emergencyContactVisible by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Button(
+            onClick = { emergencyContactVisible = !emergencyContactVisible },
+            modifier = Modifier.padding(top = 16.dp),
+            colors = ButtonDefaults.buttonColors(
+                backgroundColor = Color.Transparent,
+                contentColor = Color.Black
+            ),
+            shape = RoundedCornerShape(50)
+        ) {
+            Text("Emergency Contact")
+        }
+    }
+
+    if (emergencyContactVisible) {
+        Text(
+            text = "Help Contact Information",
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .padding(top = 16.dp)
+                .fillMaxWidth()
+        )
+        Text(
+            text = "Phone: 1-888-668-6810",
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .padding(top = 16.dp)
+                .fillMaxWidth()
+        )
+        val uriHandler = LocalUriHandler.current
+        val annotatedLinkString = buildAnnotatedString {
+            withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
+                withAnnotation(tag = "", annotation = "https://www.canada.ca/en/public-health/services/mental-health-services/mental-health-get-help.html") {
+                    append("https://www.canada.ca/en/public-health/services/mental-health-services/mental-health-get-help.html")
+                }
+            }
+        }
+        ClickableText(
+            text = annotatedLinkString,
+            onClick = { offset ->
+                annotatedLinkString.getStringAnnotations("URL", offset, offset).firstOrNull()?.let { annotation ->
+                    uriHandler.openUri(annotation.item)
+                }
+            },
+        )
     }
 }
 
@@ -145,7 +232,9 @@ fun DropdownMenu(entries: List<JournalEntryDO>, selectedEntry: JournalEntryDO, o
                     Icon(Icons.Filled.ArrowDropDown, contentDescription = "Dropdown icon")
                 }
             },
-            modifier = Modifier.fillMaxWidth().clickable { expanded = true }
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = true }
         )
 
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -173,14 +262,40 @@ fun getAllEntries(): List<JournalEntryDO> {
     return items.toList()
 }
 
+fun getEntryById(id: String?): JournalEntryDO? {
+    val config = RealmConfiguration.create(schema = setOf(JournalEntryDO::class))
+    val realm = Realm.open(config)
+
+    return realm.query<JournalEntryDO>("id=='$id'").find().firstOrNull()
+}
+
 fun getPositives(entry: JournalEntryDO?): List<String> {
-    return entry?.positives?.toList() ?: emptyList()
+    val latestEntry = getEntryById(entry?.id)
+    return latestEntry?.positives?.toList() ?: emptyList()
 }
 
 fun getNegatives(entry: JournalEntryDO?): List<String> {
-    return entry?.negatives?.toList() ?: emptyList()
+    val latestEntry = getEntryById(entry?.id)
+    return latestEntry?.negatives?.toList() ?: emptyList()
 }
 
 fun getWorkOns(entry: JournalEntryDO?): List<String> {
-    return entry?.workOn?.toList() ?: emptyList()
+    val latestEntry = getEntryById(entry?.id)
+    return latestEntry?.workOn?.toList() ?: emptyList()
+}
+fun clearAnalyticsForEntry(entry: JournalEntryDO?) {
+    if (entry == null) {
+        return
+    }
+
+    val config = RealmConfiguration.create(schema = setOf(JournalEntryDO::class))
+    val realm = Realm.open(config)
+
+    realm.writeBlocking {
+        findLatest(entry)?.apply {
+            positives?.clear()
+            negatives?.clear()
+            workOn?.clear()
+        }
+    }
 }

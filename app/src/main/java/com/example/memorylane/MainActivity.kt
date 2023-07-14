@@ -51,6 +51,8 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.memorylane.analytics.AnalyticsWorker
+import com.example.memorylane.analytics.WeeklyAnalyticsWorker
+import com.example.memorylane.data.JournalEntryDO
 import com.example.memorylane.data.JournalEntryResponseDO
 import com.example.memorylane.workers.BackendWorker
 import java.util.concurrent.TimeUnit
@@ -76,9 +78,14 @@ class MainActivity : ComponentActivity() {
             .build()
 
         val repeatInterval = 15L
+        val repeatIntervalLong = 1440L
         val repeatIntervalTimeUnit = TimeUnit.MINUTES
 
         val dbUpdateWorkRequest = PeriodicWorkRequestBuilder<BackendWorker>(repeatInterval, repeatIntervalTimeUnit)
+            .setConstraints(constraints)
+            .build()
+
+        val weeklyAnalyticsWorkRequest = PeriodicWorkRequestBuilder<WeeklyAnalyticsWorker>(repeatIntervalLong, repeatIntervalTimeUnit)
             .setConstraints(constraints)
             .build()
 
@@ -94,13 +101,18 @@ class MainActivity : ComponentActivity() {
         )
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "weeklyAnalyticsWork",
+            ExistingPeriodicWorkPolicy.KEEP,
+            weeklyAnalyticsWorkRequest
+        )
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "dbUpdateWork",
             ExistingPeriodicWorkPolicy.KEEP,
             dbUpdateWorkRequest
         )
 
-        WorkManager.getInstance(this).enqueue(gptRequestWorkRequest)
-//        WorkManager.getInstance(this).enqueue(dbUpdateWorkRequest)
+//        WorkManager.getInstance(this).enqueue(gptRequestWorkRequest)
     }
 }
 

@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -14,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.memorylane.data.JournalEntryDO
@@ -39,11 +42,11 @@ fun AnalyticsPage() {
     val weeks = getWeeklyAllEntries()
     var selectedWeek by remember { mutableStateOf(weeks.firstOrNull()) }
 
-    val positives = getWeeklyPositives(selectedWeek)
-    val negatives = getWeeklyNegatives(selectedWeek)
-    val workOns = getWeeklyWorkOns(selectedWeek)
+    var positives by remember { mutableStateOf(getWeeklyPositives(selectedWeek)) }
+    var negatives by remember { mutableStateOf(getWeeklyNegatives(selectedWeek)) }
+    var workOns by remember { mutableStateOf(getWeeklyWorkOns(selectedWeek)) }
 
-    Column(modifier = Modifier.verticalScroll(rememberScrollState()).padding(bottom = 64.dp)) {
+    Column(modifier = Modifier.verticalScroll(rememberScrollState()).padding(bottom = 64.dp).fillMaxWidth()) {
         Text(text = "Week Character Count", textAlign = TextAlign.Center, color = MaterialTheme.colors.secondary, modifier = Modifier.padding(top = 16.dp).fillMaxWidth())
         Chart(
             chart = lineChart(),
@@ -59,9 +62,24 @@ fun AnalyticsPage() {
             bottomAxis = bottomAxis(),
         )
         Text(text = "Recognized Entry Commonalities", textAlign = TextAlign.Center, color = MaterialTheme.colors.secondary, modifier = Modifier.padding(top = 16.dp).fillMaxWidth())
+
+        Button(onClick = {
+            clearAnalyticsForWeek(selectedWeek)
+            positives = getWeeklyPositives(selectedWeek)
+            negatives = getWeeklyNegatives(selectedWeek)
+            workOns = getWeeklyWorkOns(selectedWeek)
+        },
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF90EE90))
+        ) {
+            Text("Reanalyze")
+        }
+
         ListDisplay(title = "Overlap Positives", items = positives)
         ListDisplay(title = "Overlap Issues", items = negatives)
         ListDisplay(title = "Overlap Areas To Work On", items = workOns)
+
+        EmergencyContact()
     }
 }
 
@@ -100,14 +118,41 @@ fun getWeeklyAllEntries(): List<WeeklyStorageDO> {
     return items.toList()
 }
 
+fun getWeeklyEntryById(id: String?): WeeklyStorageDO? {
+    val config = RealmConfiguration.create(schema = setOf(WeeklyStorageDO::class))
+    val realm = Realm.open(config)
+
+    return realm.query<WeeklyStorageDO>("id=='$id'").find().firstOrNull()
+}
+
 fun getWeeklyPositives(entry: WeeklyStorageDO?): List<String> {
-    return entry?.continuingPositives?.toList() ?: emptyList()
+    val latestEntry = getWeeklyEntryById(entry?.id)
+    return latestEntry?.continuingPositives?.toList() ?: emptyList()
 }
 
 fun getWeeklyNegatives(entry: WeeklyStorageDO?): List<String> {
-    return entry?.problems?.toList() ?: emptyList()
+    val latestEntry = getWeeklyEntryById(entry?.id)
+    return latestEntry?.problems?.toList() ?: emptyList()
 }
 
 fun getWeeklyWorkOns(entry: WeeklyStorageDO?): List<String> {
-    return entry?.thingsToWorkOn?.toList() ?: emptyList()
+    val latestEntry = getWeeklyEntryById(entry?.id)
+    return latestEntry?.thingsToWorkOn?.toList() ?: emptyList()
+}
+
+fun clearAnalyticsForWeek(week: WeeklyStorageDO?) {
+    if (week == null) {
+        return
+    }
+
+    val config = RealmConfiguration.create(schema = setOf(WeeklyStorageDO::class))
+    val realm = Realm.open(config)
+
+    realm.writeBlocking {
+        findLatest(week)?.apply {
+            continuingPositives?.clear()
+            problems?.clear()
+            thingsToWorkOn?.clear()
+        }
+    }
 }
