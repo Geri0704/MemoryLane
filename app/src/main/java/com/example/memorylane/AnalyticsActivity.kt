@@ -62,6 +62,8 @@ fun AnalyticsPage() {
         ListDisplay(title = "Overlap Positives", items = positives)
         ListDisplay(title = "Overlap Issues", items = negatives)
         ListDisplay(title = "Overlap Areas To Work On", items = workOns)
+
+        EmergencyContact()
     }
 }
 
