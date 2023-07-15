@@ -1,5 +1,6 @@
 package com.example.memorylane
 
+import android.content.Context
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,9 +33,9 @@ data class SignUpResponse(val token: String = "", val message: String = "")
 @Composable
 fun AccountCreation(
     modifier: Modifier = Modifier,
-    token: MutableState<String>,
     onCreateAccountSuccessful: () -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    context: Context
 ) {
     val nameState = remember { mutableStateOf(TextFieldValue()) }
     val emailState = remember { mutableStateOf(TextFieldValue()) }
@@ -79,7 +80,11 @@ fun AccountCreation(
 
                 if (signUpResponse?.isSuccessful == true) {
                     if (!signUpResponseObject?.token.isNullOrBlank()) {
-                        token.value = signUpResponseObject.token
+                        val sharedPref = context.getSharedPreferences("UserSettings", Context.MODE_PRIVATE)
+                        with(sharedPref.edit()){
+                            putString("authToken", signUpResponseObject.token)
+                            apply()
+                        }
                         onCreateAccountSuccessful()
                     }
                 }
