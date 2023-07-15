@@ -46,8 +46,8 @@ fun AnalyticsPage() {
     var negatives by remember { mutableStateOf(getWeeklyNegatives(selectedWeek)) }
     var workOns by remember { mutableStateOf(getWeeklyWorkOns(selectedWeek)) }
 
-    Column(modifier = Modifier.verticalScroll(rememberScrollState()).padding(bottom = 64.dp).fillMaxWidth()) {
-        Text(text = "Week Character Count", textAlign = TextAlign.Center, color = MaterialTheme.colors.secondary, modifier = Modifier.padding(top = 16.dp).fillMaxWidth())
+    Column(modifier = Modifier.padding(16.dp).verticalScroll(rememberScrollState()).padding(bottom = 64.dp).fillMaxWidth()) {
+        Text(text = "Week Character Count", textAlign = TextAlign.Center, color = MaterialTheme.colors.secondary, modifier = Modifier.fillMaxWidth())
         Chart(
             chart = lineChart(),
             chartModelProducer = chartEntryModelProducer1,
