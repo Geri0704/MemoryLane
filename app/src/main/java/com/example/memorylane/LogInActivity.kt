@@ -1,5 +1,6 @@
 package com.example.memorylane
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
@@ -30,9 +31,9 @@ data class LogInResponse(val token: String = "", val message: String = "")
 @Composable
 fun LogInPage(
     modifier: Modifier = Modifier,
-    token: MutableState<String>,
     onLoginSuccessful: () -> Unit,
-    onCreateAccountClick: () -> Unit
+    onCreateAccountClick: () -> Unit,
+    context: Context
 ) {
     val emailState = remember { mutableStateOf(TextFieldValue()) }
     val passwordState = remember { mutableStateOf(TextFieldValue()) }
@@ -49,19 +50,23 @@ fun LogInPage(
                     errMsg = exception.toString()
                 }
 
-//                val gson = Gson()
-//                val logInResponseObject =
-//                    gson.fromJson(logInResponse?.body?.string(), LogInResponse::class.java)
-//
-//                if (logInResponse?.isSuccessful == true) {
-//                    if (!logInResponseObject?.token.isNullOrBlank()) {
-//                        token.value = logInResponseObject.token
-//                        onLoginSuccessful()
-//                    }
-//                }
-//                else {
-//                    errMsg = logInResponseObject.message
-//                }
+                val gson = Gson()
+                val logInResponseObject =
+                    gson.fromJson(logInResponse?.body?.string(), LogInResponse::class.java)
+
+                if (logInResponse?.isSuccessful == true) {
+                    if (!logInResponseObject?.token.isNullOrBlank()) {
+                        val sharedPref = context.getSharedPreferences("UserSettings", Context.MODE_PRIVATE)
+                        with(sharedPref.edit()){
+                            putString("authToken", logInResponseObject.token)
+                            apply()
+                        }
+                        onLoginSuccessful()
+                    }
+                }
+                else {
+                    errMsg = logInResponseObject.message
+                }
             }
         }
     }
