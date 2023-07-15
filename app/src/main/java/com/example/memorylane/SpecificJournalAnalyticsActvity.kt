@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -177,6 +178,7 @@ fun EmergencyContact() {
         }
         ClickableText(
             text = annotatedLinkString,
+            style = TextStyle(textAlign = TextAlign.Center),
             onClick = { offset ->
                 annotatedLinkString.getStringAnnotations("URL", offset, offset).firstOrNull()?.let { annotation ->
                     uriHandler.openUri(annotation.item)
